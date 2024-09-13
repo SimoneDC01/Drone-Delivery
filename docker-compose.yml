@@ -1,0 +1,90 @@
+version: '3.4'
+services:
+  admin-interface:
+    build: admin-interface
+    container_name: admin-interface
+    volumes:
+      - ./admin-interface:/usr/src/app
+    ports:
+      - "5000:5000"
+    networks:
+      - dd-network
+
+  amazon-api:
+    build: amazon-api
+    container_name: amazon-api
+    volumes:
+      - ./amazon-api:/app
+    networks:
+      - dd-network
+
+  drones:
+    build: drones
+    container_name: drones
+    volumes:
+      - ./drones:/app
+    networks:
+      - dd-network
+
+  order-manager:
+    build: order-manager
+    container_name: order-manager
+    volumes:
+      - ./order-manager:/app
+    networks:
+      - dd-network
+
+  scheduler:
+    build: scheduler
+    container_name: scheduler
+    volumes:
+      - ./scheduler:/app
+    networks:
+      - dd-network
+
+  tetris:
+    build: tetris
+    container_name: tetris
+    volumes:
+      - ./tetris:/app
+    networks:
+      - dd-network
+
+  time:
+    build: time
+    container_name: time
+    volumes:
+      - ./time:/app
+    networks:
+      - dd-network
+
+  user-interface:
+    build: user-interface
+    container_name: user-interface
+    volumes:
+      - ./user-interface:/usr/src/app
+    ports:
+      - "3000:3000"
+    networks:
+      - dd-network
+
+  user-manager:
+    build: user-manager
+    container_name: user-manager
+    volumes:
+      - ./user-manager:/app
+    networks:
+      - dd-network
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - dd-network
+
+networks:
+  dd-network:
+    driver: bridge
