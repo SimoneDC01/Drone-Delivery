@@ -17,8 +17,7 @@
             event.preventDefault();
             const name = document.getElementById('nameInput').value;
 
-            const params = new URLSearchParams({ name: name });
-            fetch(`http://spring-boot-app:8080/hello?${params}`, {
+            fetch(`http://localhost:3000/getProductsInfo?asins=${name}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'

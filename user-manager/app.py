@@ -2,14 +2,18 @@ from flask import Flask, request
 import threading
 import pika
 import requests
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-def getProductsInfo(asins = ['1', '2', '3']):
-    url = 'http://amazon-api:8080/getProductsInfo'
-    data = {'asins': asins}
-    response = requests.post(url, json=data)
-    return response
+@app.route('/getProductsInfo', methods=['POST'])
+def get_products_info():
+    data = request.get_json()
+    name = data['asins']
+
+    # Process the name and return a response
+    response = {'message': f'Hello, {name}!'}
+    return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
