@@ -26,6 +26,23 @@ app.get('/advance', (req, res) => {
     });
 });
 
+
+app.get('/date_and_time_request', (req, res) => {
+    fetch(`http://time:8080/date_and_time_request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        res.json(data);
+    }).catch(error => {
+        res.status(500).json({ error: error.message });
+    });
+});
+
+
 app.listen(5000, () => {
     console.log('Server started on port 5000');
 });

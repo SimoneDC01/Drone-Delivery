@@ -14,6 +14,21 @@
     </form>
 
     <script>
+
+        fetch(`http://localhost:5000/date_and_time_request`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        alert(data);
+                    }).catch(error => {
+                        alert('Error: ' + error.message);
+                    });
+
+
         document.getElementById('advanceform').addEventListener('submit', function(event) {
             event.preventDefault();
             const minutes = document.getElementById('minutes').value;

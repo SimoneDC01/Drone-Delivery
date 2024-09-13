@@ -41,5 +41,27 @@ def send_Address_Info():
     response = requests.post(url, json=data)
     return jsonify(response.text + '[USER MANAGER]')
 
+
+
+@app.route('/date_and_time_request', methods=['POST'])
+def date_and_time_request():
+    url = 'http://time:8080/date_and_time_request'
+    response = requests.post(url)
+    return jsonify(response.text + '[USER MANAGER]')
+
+
+
+@app.route('/date_and_time_new', methods=['POST'])
+def date_and_time_new():
+    param=request.get_json()["date_and_time"]
+    url = 'http://user-interface:3000/date_and_time_new'
+    data={"date_and_time":param}
+    response=requests.post(url, json=data)
+    return jsonify(response.text + '[USER MANAGER]')
+    
+   
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

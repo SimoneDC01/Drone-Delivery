@@ -25,6 +25,32 @@
     </form>
 
     <script>
+
+        const socket = new WebSocket('ws://localhost:3000');
+
+        // Gestisci la ricezione di messaggi dal server
+        socket.onmessage = function(event) {
+            // Mostra un alert con il messaggio ricevuto dal server
+            alert(event.data);
+        };
+
+        socket.onerror = function(error) {
+            console.error('Errore WebSocket', error);
+        };
+
+        fetch(`http://localhost:3000/date_and_time_request`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+
         document.getElementById('addressForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('addressInput').value;
