@@ -1,6 +1,4 @@
 from flask import Flask, request
-import threading
-import pika
 
 app = Flask(__name__)
 

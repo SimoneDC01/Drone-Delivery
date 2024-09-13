@@ -76,15 +76,6 @@ services:
     networks:
       - dd-network
 
-  rabbitmq:
-    image: rabbitmq:latest
-    container_name: rabbitmq
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    networks:
-      - dd-network
-
 networks:
   dd-network:
     driver: bridge

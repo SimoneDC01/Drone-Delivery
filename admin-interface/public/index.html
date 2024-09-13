@@ -6,19 +6,19 @@
     <title>Simple Form</title>
 </head>
 <body>
-    <h1>Insert Name</h1>
-    <form id="nameForm">
-        <input type="text" id="nameInput" placeholder="Enter your name">
-        <button type="submit">Send</button>
+
+    <h1>Insert minutes</h1>
+    <form id="advanceform">
+        <input type="text" id="minutes" placeholder="30 min">
+        <button type="submit">Advance</button>
     </form>
 
     <script>
-        document.getElementById('nameForm').addEventListener('submit', function(event) {
+        document.getElementById('advanceform').addEventListener('submit', function(event) {
             event.preventDefault();
-            const name = document.getElementById('nameInput').value;
+            const minutes = document.getElementById('minutes').value;
 
-            const params = new URLSearchParams({ name: name });
-            fetch(`http://spring-boot-app:8080/hello?${params}`, {
+            fetch(`http://localhost:5000/advance?minutes=${minutes}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -30,7 +30,7 @@
             }).catch(error => {
                 alert('Error: ' + error.message);
             });
-        });
+        }); 
     </script>
 </body>
 </html>

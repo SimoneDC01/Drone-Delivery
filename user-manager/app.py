@@ -1,8 +1,5 @@
-from flask import Flask, request
-import threading
-import pika
-import requests
 from flask import Flask, request, jsonify
+import requests
 
 app = Flask(__name__)
 
@@ -32,7 +29,7 @@ def get_delivery_info():
     url = 'http://scheduler:8080/getDeliveryInfo'
     data = {'order_id': name}
     response = requests.post(url, json=data)
-    return jsonify(response.text)
+    return jsonify(response.text + '[USER MANAGER]')
 
 #route that takes the address and send all order_info to order-manager
 @app.route('/sendAddressInfo', methods=['POST'])
@@ -42,7 +39,7 @@ def send_Address_Info():
     url = 'http://order-manager:8080/sendOrder'
     data = {'address': address,'order_info':["order_id","data","altro"]}
     response = requests.post(url, json=data)
-    return jsonify(response.text)
+    return jsonify(response.text + '[USER MANAGER]')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
