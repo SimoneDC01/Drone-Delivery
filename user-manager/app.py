@@ -10,10 +10,10 @@ app = Flask(__name__)
 def get_products_info():
     data = request.get_json()
     name = data['asins']
-
-    # Process the name and return a response
-    response = {'message': f'Hello, {name}!'}
-    return jsonify(response)
+    url = 'http://amazon-api:8080/getProductsInfo'
+    data = {'asins': name}
+    response = requests.post(url, json=data)
+    return jsonify(response.text)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
