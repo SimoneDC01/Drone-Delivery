@@ -4,6 +4,20 @@ import pika
 
 app = Flask(__name__)
 
+#route in witch the manager insert the order arrived from user-manager into the dataset
+@app.route('/sendOrder', methods=['POST'])
+def insert_order():
+    data = request.get_json()
+    return 'ordine inserito'
+
+#TO-DO
+#route in witch the manager tkaes order from dataset and responde to scheduler 
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+#old rabbit code
+'''
 def sendMessage():
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
@@ -23,6 +37,4 @@ def hello():
     timer.start()
     
     return f"Hello, {name}!"
-
-if __name__ == '__main__':
-    app.run(debug=True)
+'''

@@ -7,6 +7,26 @@ app.get('/', (req, res) =>{
     res.sendFile(filePath);
 });
 
+app.get('/getDeliveryInfo', (req, res) => {
+    const name = req.query.order_id;
+    const payload = { order_id: name };
+
+    fetch(`http://user-manager:8080/getDeliveryInfo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        res.json(data);
+    }).catch(error => {
+        res.status(500).json({ error: error.message });
+    });
+});
+
+
 app.get('/getProductsInfo', (req, res) => {
     const name = req.query.asins;
     const payload = { asins: name };
@@ -25,6 +45,26 @@ app.get('/getProductsInfo', (req, res) => {
         res.status(500).json({ error: error.message });
     });
 });
+
+app.get('/sendAddressInfo', (req, res) => {
+    const name = req.query.address;
+    const payload = { address: name };
+
+    fetch(`http://user-manager:8080/sendAddressInfo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        res.json(data);
+    }).catch(error => {
+        res.status(500).json({ error: error.message });
+    });
+});
+
 
 app.listen(3000, () => {
     console.log('Server started on port 3000');

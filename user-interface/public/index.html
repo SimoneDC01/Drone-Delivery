@@ -12,6 +12,59 @@
         <button type="submit">Send</button>
     </form>
 
+    <h1>Insert Order_id</h1>
+    <form id="orderForm">
+        <input type="text" id="orderInput" placeholder="Enter your name">
+        <button type="submit">Send</button>
+    </form>
+
+    <h1>Insert delivery_address</h1>
+    <form id="addressForm">
+        <input type="text" id="addressInput" placeholder="Enter your name">
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.getElementById('addressForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('addressInput').value;
+
+            fetch(`http://localhost:3000/sendAddressInfo?address=${name}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
+
+    <script>
+        document.getElementById('orderForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('orderInput').value;
+
+            fetch(`http://localhost:3000/getDeliveryInfo?order_id=${name}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
+
+
     <script>
         document.getElementById('nameForm').addEventListener('submit', function(event) {
             event.preventDefault();

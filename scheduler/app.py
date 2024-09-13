@@ -4,6 +4,25 @@ import pika
 
 app = Flask(__name__)
 
+
+#route for respond with delivery_information on order_id to user-manager
+@app.route('/getDeliveryInfo', methods=['POST'])
+def getDeliveryInfo():
+    order_id = request.get_json()['order_id']
+    return order_id+' '+"delivery"
+
+
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+#old rabbit code
+'''
 def sendMessage():
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
@@ -24,5 +43,4 @@ def hello():
     
     return f"Hello, {name}!"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    '''
