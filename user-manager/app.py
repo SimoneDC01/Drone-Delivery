@@ -35,9 +35,10 @@ def get_delivery_info():
 @app.route('/sendAddressInfo', methods=['POST'])
 def send_Address_Info():
     data = request.get_json()
-    address = data['address']
+    #TO-DO
+    #prendere address dalla request e tutti gli altri dati salvati da api, tetris e time. Generare l ID_Order
     url = 'http://order-manager:8080/sendOrder'
-    data = {'address': address,'order_info':["order_id","data","altro"]}
+    data = {'Date_time_order': "20/09/2024, 10:30", 'Delivery_day':"21/09/2024", 'ID_Order':'PROVA01', 'Address':'Via Nonno Nanni 19', 'Num_packages':2, 'Priority':4, 'Packages':[["Prodotto1", "Prodotto2"],['Prodotto3']]}
     response = requests.post(url, json=data)
     return jsonify(response.text + '[USER MANAGER]')
 
