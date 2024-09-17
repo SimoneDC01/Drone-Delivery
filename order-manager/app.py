@@ -101,8 +101,8 @@ def getOrdersOfTheDay():
 
 
 #route of update of the status of the products
-@app.route('/UpdateStatusProducts', methods=['POST'])
-def UpdateStatusProducts():
+@app.route('/updateStatusProducts', methods=['POST'])
+def updateStatusProducts():
     data = request.get_json()
     Order_Package=data['order-package'].split("_",1)
     Order=Order_Package[0]
