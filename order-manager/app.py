@@ -57,6 +57,8 @@ def getOrdersOfTheDay():
     ''', (Delivery_day,))
 
     orders = cursor.fetchall()
+    if orders==[]:
+        return "No orders for this day"
 
     # Chiude la connessione (non serve commit per SELECT)
     conn.close()
@@ -101,6 +103,35 @@ def UpdateStatusProducts():
     conn.close()
 
     return 'Products modified'
+
+
+
+@app.route('/getDeliveryInfo', methods=['POST'])
+def get_delivery_info():
+    data = request.get_json()
+    ID_Order = data['ID_Order']
+    conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT Description, Status  FROM Products WHERE ID_Order = ?
+    ''', (ID_Order,))
+
+    products = cursor.fetchall()
+    if products==[]:
+        return "The order does not exists"
+    products_list = []
+    for product in products:
+        products_list.append({
+            'Description':product[0],
+            'Status': product[1]
+        })
+    # Chiude la connessione (non serve commit per SELECT)
+    conn.close()    
+    # Restituisce i risultati come JSON
+    return products_list
+
+
 
 
 if __name__ == '__main__':

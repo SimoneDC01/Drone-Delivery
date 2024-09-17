@@ -25,9 +25,9 @@ def get_products_info():
 @app.route('/getDeliveryInfo', methods=['POST'])
 def get_delivery_info():
     data = request.get_json()
-    name = data['order_id']
+    ID_Order = data['order_id']
     url = 'http://order-manager:8080/getDeliveryInfo'
-    data = {'order_id': name}
+    data = {'ID_Order': ID_Order}
     response = requests.post(url, json=data)
     return jsonify(response.text + '[USER MANAGER]')
 
