@@ -26,7 +26,7 @@ def get_products_info():
 def get_delivery_info():
     data = request.get_json()
     name = data['order_id']
-    url = 'http://scheduler:8080/getDeliveryInfo'
+    url = 'http://order-manager:8080/getDeliveryInfo'
     data = {'order_id': name}
     response = requests.post(url, json=data)
     return jsonify(response.text + '[USER MANAGER]')

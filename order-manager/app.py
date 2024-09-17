@@ -44,7 +44,7 @@ def sendOrder():
 
     return 'Ordine inserito!'
 
-#TO-DO
+
 #route in which the manager takes order from dataset and responds to scheduler
 @app.route('/getOrdersOfTheDay', methods=['POST'])
 def getOrdersOfTheDay():
@@ -74,6 +74,34 @@ def getOrdersOfTheDay():
         })
     # Restituisce i risultati come JSON
     return orders_list
+
+
+
+
+#route of update of the status of the products
+@app.route('/UpdateStatusProducts', methods=['POST'])
+def UpdateStatusProducts():
+    data = request.get_json()
+    Order_Package=data['Order-Package']
+    Order=Order_Package[0]
+    Package=Order_Package[1]
+    Status=data['Status']
+    # Connect to the SQLite database
+    conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
+    cursor = conn.cursor()
+    # Esegui l'aggiornamento nella tabella Products
+    cursor.execute('''
+        UPDATE Products
+        SET Status = ?
+        WHERE ID_Order = ? AND Num_package = ?
+    ''', (Status, Order, Package))
+
+    # Commit the transaction and close the connection
+    conn.commit()
+    conn.close()
+
+    return 'Products modified'
+
 
 if __name__ == '__main__':
     app.run(debug=True)
