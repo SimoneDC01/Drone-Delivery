@@ -1,6 +1,6 @@
 import sqlite3
 from flask import Flask, request, jsonify
-
+from datetime import datetime
 app = Flask(__name__)
 
 
@@ -48,7 +48,7 @@ def sendOrder():
 #route in which the manager takes order from dataset and responds to scheduler
 @app.route('/getOrdersOfTheDay', methods=['POST'])
 def getOrdersOfTheDay():
-    Delivery_day = request.get_json()['Delivery_day']
+    Delivery_day = request.get_json()['delivery_date']
     conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
     cursor = conn.cursor()
 
@@ -57,20 +57,32 @@ def getOrdersOfTheDay():
     ''', (Delivery_day,))
 
     orders = cursor.fetchall()
-
     # Chiude la connessione (non serve commit per SELECT)
     conn.close()
 
     # Trasforma i dati in un formato leggibile, ad esempio in un dizionario per ogni riga
     orders_list = []
     for order in orders:
+        order_date_time_str = order[0]
+
+        # Converti la stringa in un oggetto datetime
+        order_datetime = datetime.strptime(order_date_time_str, "%d/%m/%Y,%H:%M")
+
+        # Crea la struttura con i campi separati
+        
         orders_list.append({
-            'Date_time_order': order[0],
-            'Delivery_day': order[1],
-            'ID_Order': order[2],
-            'Address': order[3],
-            'Num_packages': order[4],
-            'Priority': order[5]
+            'order_date_time': {
+            'day': order_datetime.day,
+            'month': order_datetime.month,
+            'year': order_datetime.year,
+            'hh': order_datetime.hour,
+            'mm': order_datetime.minute
+        },
+            'delivery_date': order[1],
+            'order_id': order[2],
+            'address': order[3],
+            'num_packages': order[4],
+            'priority': order[5]
         })
     # Restituisce i risultati come JSON
     return orders_list
@@ -82,10 +94,10 @@ def getOrdersOfTheDay():
 @app.route('/UpdateStatusProducts', methods=['POST'])
 def UpdateStatusProducts():
     data = request.get_json()
-    Order_Package=data['Order-Package']
+    Order_Package=data['order-package']
     Order=Order_Package[0]
     Package=Order_Package[1]
-    Status=data['Status']
+    Status=data['status']
     # Connect to the SQLite database
     conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
     cursor = conn.cursor()
@@ -101,6 +113,35 @@ def UpdateStatusProducts():
     conn.close()
 
     return 'Products modified'
+
+
+
+@app.route('/getDeliveryInfo', methods=['POST'])
+def get_delivery_info():
+    data = request.get_json()
+    ID_Order = data['ID_Order']
+    conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT Description, Status  FROM Products WHERE ID_Order = ?
+    ''', (ID_Order,))
+
+    products = cursor.fetchall()
+    if products==[]:
+        return "The order does not exists"
+    products_list = []
+    for product in products:
+        products_list.append({
+            'Description':product[0],
+            'Status': product[1]
+        })
+    # Chiude la connessione (non serve commit per SELECT)
+    conn.close()    
+    # Restituisce i risultati come JSON
+    return products_list
+
+
 
 
 if __name__ == '__main__':
