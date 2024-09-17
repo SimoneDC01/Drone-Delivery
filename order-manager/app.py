@@ -104,9 +104,9 @@ def getOrdersOfTheDay():
 @app.route('/UpdateStatusProducts', methods=['POST'])
 def UpdateStatusProducts():
     data = request.get_json()
-    Order_Package=data['order-package']
+    Order_Package=data['order-package'].split("_",1)
     Order=Order_Package[0]
-    Package=Order_Package[1]
+    Package=int(Order_Package[1])
     Status=data['status']
     # Connect to the SQLite database
     conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
