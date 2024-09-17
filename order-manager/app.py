@@ -48,13 +48,17 @@ def sendOrder():
 #route in which the manager takes order from dataset and responds to scheduler
 @app.route('/getOrdersOfTheDay', methods=['POST'])
 def getOrdersOfTheDay():
-    Delivery_day = request.get_json()['delivery_date']
+    delivery_date = request.get_json()['delivery_date']
+    day = str(delivery_date['day']) if delivery_date['day'] > 9 else '0' + str(delivery_date['day'])
+    month = str(delivery_date['month']) if delivery_date['month'] > 9 else '0' + str(delivery_date['month'])
+    year = str(delivery_date['year'])
+    delivery_date = day + '/' + month + '/' + year
     conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
     cursor = conn.cursor()
 
     cursor.execute('''
         SELECT Date_time_order, Delivery_day, ID_Order, Address, Num_packages, Priority  FROM Orders WHERE Delivery_day = ?
-    ''', (Delivery_day,))
+    ''', (delivery_date,))
 
     orders = cursor.fetchall()
     # Chiude la connessione (non serve commit per SELECT)
@@ -64,9 +68,11 @@ def getOrdersOfTheDay():
     orders_list = []
     for order in orders:
         order_date_time_str = order[0]
+        delivery_date_str = order[1]
 
         # Converti la stringa in un oggetto datetime
         order_datetime = datetime.strptime(order_date_time_str, "%d/%m/%Y,%H:%M")
+        delivery_date = datetime.strptime(delivery_date_str, "%d/%m/%Y")
 
         # Crea la struttura con i campi separati
         
@@ -77,8 +83,12 @@ def getOrdersOfTheDay():
             'year': order_datetime.year,
             'hh': order_datetime.hour,
             'mm': order_datetime.minute
-        },
-            'delivery_date': order[1],
+            },
+            'delivery_date': {
+                'day': delivery_date.day,
+                'month': delivery_date.month,
+                'year': delivery_date.year
+            },
             'order_id': order[2],
             'address': order[3],
             'num_packages': order[4],
