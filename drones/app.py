@@ -51,7 +51,7 @@ def extract_time(time):
 def get_deliver_status(package, time) :
     deliver_duration = extract_time(package['time']['end'])[1] + (extract_time(package['time']['end'])[0] - extract_time(package['time']['start'])[0]) * 60 - extract_time(package['time']['start'])[1]
     half_delivery_time = extract_time(package['time']['start'])[0] + (deliver_duration/2 + extract_time(package['time']['start'])[1]) // 60, (extract_time(package['time']['start'])[1] + (deliver_duration/2)) % 60
-    if(time <= half_delivery_time) : 
+    if(time <= half_delivery_time) :
         return DELIVERING
     else :
         return GOING_BACK
@@ -69,6 +69,7 @@ schedule = {'drone1': [{'index': '1_2', 'time': {'start': '2:30', 'end': '2:40'}
 def advance(time):
     #schedule = request.get_json()['schedule']   # {drone1: [{order,package : (start,end)}, {order,package : (start,end)}, ... ], drone2:  [{order,package : (start,end)}, {order,package : (start,end)}, ... ], ... } 
 
+    #print(list(schedule.keys()))
     #time = request.get_json()['time']           # {hh : value, mm : value}
     
     drones_list = list(schedule.keys())
