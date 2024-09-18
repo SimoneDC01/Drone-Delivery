@@ -1,6 +1,7 @@
 from flask import Flask, request
 import requests
 import numpy as np
+import math
 
 app = Flask(__name__)
 
@@ -16,16 +17,13 @@ def advance():
     n_drones = loadN_drones(date)
     schedule = loadSchedule()
 
-    print(f"n_drones: {n_drones}")
-    print(f"schedule: {schedule}")
-
     url = 'http://drones:8080/advance'
 
     for _ in range(minutes):
         if time['hh'] >= 8 and time['hh'] < 20:
             data = {'schedule': schedule, 'time': time}
             response = requests.post(url, json=data)
-            info = response.text # {drone1: {battery1 : value, battery2 : value, status : value(charging , delivering, going_back), is_strong_wind : value }, ...}
+            info = response.text # {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
 
             date, time = updateDateTime(date, time)
             schedule = updateSchedule(schedule, info)
@@ -46,10 +44,26 @@ def createDailySchedule(date):
         for package_index in range(order['num_packages']):
             order_package = f"{order['order_id']}_{package_index + 1}"
             packages[order_package] = {'priority': order['priority'], 'duration': generate_truncated_gaussian_value()} # {order_package: {priority: int, duration: int}, ...}
-            
-    # TODO: Implement priority-based scheduling
+
+    total_duration = sum([package['duration'] for package in packages.values()])
+    n_drones = math.ceil(total_duration / 540) # 9 hours = 540 minutes
 
     # Start: 9:00    End: 18:00    Extra: 20:00
+
+    done = False
+    while not done:
+        done = schedule(n_drones, packages)
+        if not done: n_drones += 1
+
+    return n_drones, packages
+
+def schedule(n_drones, packages):
+    # Sort packages by priority and then by duration
+    packages = dict(sorted(packages.items(), key=lambda item: (item[1]['priority'], item[1]['duration']), reverse=True))
+
+    # TODO: Implement the greedy load balancing algorithm
+
+    return True
 
 # TODO
 def updateSchedule(schedule, info):
@@ -67,7 +81,6 @@ def generate_truncated_gaussian_value(mu = 60, min_val = 20, max_val = 120):
         if min_val <= discrete_value <= max_val:  # Apply truncation
             return discrete_value
 
-# Alessio
 def loadN_drones(date):
     url = 'http://data-manager:8080/loadN_drones'
     response = requests.post(url, json={'date': date})
@@ -93,7 +106,7 @@ def saveSchedule(schedule):
     response = requests.post(url, json={'schedule': schedule})
     return response.text
 
-def updateDateTime(date, time, minutes=1):
+def updateDateTime(date, time, minutes = 1):
     time['mm'] += minutes
 
     if time['mm'] >= 60:

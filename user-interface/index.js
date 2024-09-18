@@ -125,6 +125,6 @@ wss.on('connection', (ws) => {
 
 
 server.listen(3000, () => {
-    console.log('Server in ascolto su http://localhost:3000');
+    console.log('Server started on port 3000');
 });
 

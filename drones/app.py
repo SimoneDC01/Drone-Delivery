@@ -60,17 +60,17 @@ def get_deliver_status(package, time) :
 app = Flask(__name__)
 
 # schedule for developing phase
-schedule = {'drone1': [{'index': '1_2', 'time': {'start': '2:30', 'end': '2:40'}}, {'index': '2_1', 'time' : {'start': '2:40', 'end': '2:50'}}], 
-                'drone2': [{'index': '3_1', 'time': {'start': '2:30', 'end': '2:50'}}, {'index': '4_1', 'time' : {'start': '2:50', 'end': '3:10'}}] 
-               }
+#schedule = {'drone1': [{'index': '1_2', 'time': {'start': '2:30', 'end': '2:40'}}, {'index': '2_1', 'time' : {'start': '2:40', 'end': '2:50'}}], 
+#                'drone2': [{'index': '3_1', 'time': {'start': '2:30', 'end': '2:50'}}, {'index': '4_1', 'time' : {'start': '2:50', 'end': '3:10'}}] 
+#               }
 
 #route for respond with delivery_information on order_id to user-manager
 @app.route('/advance', methods=['POST'])
-def advance(time):
-    #schedule = request.get_json()['schedule']   # {drone1: [{order,package : (start,end)}, {order,package : (start,end)}, ... ], drone2:  [{order,package : (start,end)}, {order,package : (start,end)}, ... ], ... } 
+def advance():
+    schedule = request.get_json()['schedule']   # {drone1: [{order,package : (start,end)}, {order,package : (start,end)}, ... ], drone2:  [{order,package : (start,end)}, {order,package : (start,end)}, ... ], ... } 
 
     #print(list(schedule.keys()))
-    #time = request.get_json()['time']           # {hh : value, mm : value}
+    time = request.get_json()['time']['hh'], request.get_json()['time']['mm']           # {hh : value, mm : value}
     
     drones_list = list(schedule.keys())
     
@@ -110,7 +110,7 @@ def advance(time):
                     
                 break
 
-    return my_drones                # { 'drone1' : {battery1 : value, battery2 : value, status : value, is_strong_wind : value }, 'drone2' : {battery1 : value, battery2 : value, status : value, is_strong_wind : value }, ... } 
+    return str(my_drones)                # { 'drone1' : {battery1 : value, battery2 : value, status : value, is_strong_wind : value }, 'drone2' : {battery1 : value, battery2 : value, status : value, is_strong_wind : value }, ... } 
 
 if __name__ == '__main__':                      
     app.run(debug=True)
