@@ -55,13 +55,18 @@ def updateSchedule(schedule, info):
 def loadN_drones(date):
     url = 'http://order-manager:8080/loadN_drones'
     response = requests.post(url, json={'date': date})
+    return response.json()['n_drones']
+
+def saveN_drones(date, n_drones):
+    url = 'http://order-manager:8080/saveN_drones'
+    response = requests.post(url, json={'date': date,'n_drones':n_drones})
     return response.text
 
 # Alessio -> Output format in updateSchedule order_by time
 def loadSchedule():
     url = 'http://order-manager:8080/loadSchedule'
     response = requests.get(url)
-    return response.text
+    return response.json()
 
 # Alessio -> Empty the database
 def emptySchedule():
@@ -126,7 +131,7 @@ def updateDateTime(date, time, minutes=1):
 def getOrdersOfTheDay(day):
     url = 'http://order-manager:8080/getOrdersOfTheDay'
     response = requests.post(url, json={'delivery_date': day})
-    return response.text
+    return response.json()
 
 #function that asks to order-manager to modify the Status of all lines having ID_Order and Num_Package
 def updateStatusOfProducts():
