@@ -154,5 +154,152 @@ def get_delivery_info():
 
 
 
+
+
+
+
+
+
+@app.route('/loadN_drones', methods=['POST'])
+def loadN_drones():
+    date = request.get_json()['date']
+    date = str(date['day']).zfill(2) + "/" + str(date['month']).zfill(2) + "/" + str(date['year'])
+    conn = sqlite3.connect('scheduler.sqlite')  # 'orders.db' is assumed to be in the same directory
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT n_drones  FROM n_drones WHERE date = ?
+    ''', (date,))
+
+    n_drones = cursor.fetchone()
+    conn.close()
+    
+    return jsonify({'n_drones':n_drones[0]})
+
+
+@app.route('/saveN_drones', methods=['POST'])
+def saveN_drones():
+    date = request.get_json()['date']
+    n_drones=request.get_json()['n_drones']
+    date = str(date['day']).zfill(2) + "/" + str(date['month']).zfill(2) + "/" + str(date['year'])
+    conn = sqlite3.connect('scheduler.sqlite')  # 'orders.db' is assumed to be in the same directory
+    cursor = conn.cursor()
+
+    # Esegui l'inserimento nella tabella n_drones
+    cursor.execute('''
+        INSERT INTO n_drones (date, n_drones)
+        VALUES (?, ?)
+    ''', (date, n_drones))
+
+    # Salva le modifiche
+    conn.commit()
+    conn.close()
+    
+    return "record insert correctly!"
+
+
+@app.route('/emptySchedule', methods=['GET'])
+def emptySchedule():
+    conn = sqlite3.connect('scheduler.sqlite')
+    cursor = conn.cursor()
+
+    try:
+        # Esegui il comando per svuotare la tabella schedule
+        cursor.execute('DELETE FROM schedule')
+
+        # Salva le modifiche
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Errore durante la cancellazione della tabella: {e}")
+    finally:
+        # Chiudi la connessione al database
+        conn.close()
+
+    return "database empty"
+
+
+
+
+@app.route('/saveSchedule', methods=['POST'])
+def saveSchedule():
+    emptySchedule()
+    schedule = request.get_json()['schedule']
+    conn = sqlite3.connect('scheduler.sqlite')
+    cursor = conn.cursor()
+
+    try:
+        # Itera su ogni drone nella struttura
+        for drone, tasks in schedule.items():
+            # Estrai il drone_id (numero dopo "drone")
+            drone_id = int(drone.replace('drone', ''))
+
+            # Itera su ogni task per quel drone
+            for task in tasks:
+                order_package = task['index']
+                start_time = task['time']['start']
+                end_time = task['time']['end']
+
+                # Inserisci i dati nella tabella schedule
+                cursor.execute('''
+                    INSERT INTO schedule (order_package, drone_id, start, end)
+                    VALUES (?, ?, ?, ?)
+                ''', (order_package, drone_id, start_time, end_time))
+
+        # Salva le modifiche
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Errore durante l'inserimento dei dati: {e}")
+    finally:
+        # Chiudi la connessione al database
+        conn.close()
+
+    return "schedule insert correctly"
+
+
+
+
+@app.route('/loadSchedule', methods=['GET'])
+def loadSchedule():
+    # Connessione al database
+    conn = sqlite3.connect('scheduler.sqlite')
+    cursor = conn.cursor()
+
+    
+    # Esegui la query per recuperare tutti i record ordinati per drone_id e start
+    cursor.execute('''
+        SELECT order_package, drone_id, start, end
+        FROM schedule
+        ORDER BY drone_id, start
+    ''')
+    
+    # Recupera tutti i record
+    records = cursor.fetchall()
+
+    # Struttura per contenere il risultato
+    schedule = {}
+
+    # Itera su ogni record e costruisci la struttura
+    for order_package, drone_id, start_time, end_time in records:
+        drone_key = f"drone{drone_id}"  # Crea la chiave in base al drone_id
+
+        # Se il drone non è già nella struttura, aggiungilo
+        if drone_key not in schedule:
+            schedule[drone_key] = []
+
+        # Aggiungi la task nella lista del drone
+        schedule[drone_key].append({
+            'index': order_package,
+            'time': {
+                'start': start_time,
+                'end': end_time
+            }
+        })
+
+    conn.close()
+    # Ritorna il risultato in formato JSON
+    return jsonify(schedule)
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
