@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route('/getPackaging', methods=['POST'])
 def getPackaging():
     data = request.get_json()["data"]
-    return 'Tetris!'
+    return {'Num_packages':2, 'Packages':[["Prodotto1", "Prodotto2"],['Prodotto3']]}
 
 if __name__ == '__main__':
     app.run(debug=True)
