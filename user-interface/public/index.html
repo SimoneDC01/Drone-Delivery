@@ -24,6 +24,13 @@
         <button type="submit">Send</button>
     </form>
 
+    <h1>Priority</h1>
+    <form id="priorityForm">
+        <input type="range" id="slider" min="0" max="5" value="3" step="1" oninput="updateValue(this.value)">
+        <span id="sliderValue">3</span>
+    </form>
+
+
     <script>
 
         const socket = new WebSocket('ws://localhost:3000');
@@ -90,8 +97,10 @@
         document.getElementById('nameForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('nameInput').value;
+            const priority = document.getElementById('slider').value;
+            const prodList = name.split(',')
 
-            fetch(`http://localhost:3000/getProductsInfo?asins=${name}`, {
+            fetch(`http://localhost:3000/getProductsInfo?asins=${prodList}&priority=${priority}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -104,6 +113,12 @@
                 alert('Error: ' + error.message);
             });
         });
+
+        
+    function updateValue(value) {
+        document.getElementById("sliderValue").innerText = value;
+    }
+    </script>
     </script>
 </body>
 </html>

@@ -38,7 +38,8 @@ app.get('/getDeliveryInfo', (req, res) => {
 
 app.get('/getProductsInfo', (req, res) => {
     const name = req.query.asins;
-    const payload = { asins: name };
+    const priority = req.query.priority
+    const payload = { asins: name, priority: priority };
     
     fetch(`http://user-manager:8080/getProductsInfo`, {
         method: 'POST',
