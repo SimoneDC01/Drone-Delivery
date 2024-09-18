@@ -5,23 +5,23 @@ import random
 
 app = Flask(__name__)
 
-temporary_order_storage=[]
+temporary_order_storage={'priority':None,'num_packages':None,'packages':None}
 
 #route that takes list of asins from frontend and call apiamazon and tetris and return information of prodoct and cost, time and orders id to frontend
 @app.route('/getProductsInfo', methods=['POST'])
 def get_products_info():
     data = request.get_json()
     prodList = data.get('asins') #list of products
-    priority = data.get('priority')
+    temporary_order_storage['priority'] = data.get('priority')
     url = 'http://amazon-api:8080/getProductsInfo'
     data = {'asins': prodList}
     response_amazon = requests.post(url, json=data)
     url = 'http://tetris:8080/getPackaging'
-    data={"data":response_amazon.json(), 'priority':priority}
+    data={"data":response_amazon.json(), 'priority':temporary_order_storage['priority']}
     response_tetris = requests.post(url, json=data)
-    num_packages = response_tetris.json()['Num_packages']
-    packages = response_tetris.json()['Packages']
-    return "ok fatto"
+    temporary_order_storage['num_packages'] = response_tetris.json()['Num_packages']
+    temporary_order_storage['packages'] = response_tetris.json()['Packages']
+    return temporary_order_storage['packages']
     #write better the return
     
 
@@ -31,12 +31,12 @@ def get_products_info():
 def get_delivery_info():
     data = request.get_json()
     ID_Order = data['order_id']
-    url = 'http://order-manager:8080/getDeliveryInfo'
+    url = 'http://data-manager:8080/getDeliveryInfo'
     data = {'ID_Order': ID_Order}
     response = requests.post(url, json=data)
-    return jsonify(response.text + '[USER MANAGER]')
+    return response.json()
 
-#route that takes the address and send all order_info to order-manager
+#route that takes the address and send all order_info to data-manager
 @app.route('/sendAddressInfo', methods=['POST'])
 def send_Address_Info():
     data = request.get_json()
@@ -69,11 +69,11 @@ def send_Address_Info():
     caratteri_legibili = string.ascii_letters + string.digits  # Include lettere maiuscole, minuscole e numeri
     id_order = ''.join(random.choice(caratteri_legibili) for _ in range(10))
 
-    url = 'http://order-manager:8080/sendOrder'
-    data = {'Date_time_order': dateTime, 'Delivery_day':delivery_day, 'ID_Order' : id_order, 'Address':address, 'Num_packages':2, 'Priority':4, 'Packages':[["Prodotto1", "Prodotto2"],['Prodotto3']]}
+    url = 'http://data-manager:8080/sendOrder'
+    data = {'Date_time_order': dateTime, 'Delivery_day':delivery_day, 'ID_Order' : id_order, 'Address':address, 'Num_packages':temporary_order_storage['num_packages'], 'Priority':temporary_order_storage['priority'], 'Packages':temporary_order_storage['packages']}
     #response = requests.post(url, json=data)
-    #return jsonify(response.text + '[USER MANAGER]')
-    return "ok"
+    #return jsonify(response.text)
+    return data
 
 
 @app.route('/date_and_time_request', methods=['POST'])

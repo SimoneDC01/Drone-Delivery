@@ -69,27 +69,27 @@ def generate_truncated_gaussian_value(mu = 60, min_val = 20, max_val = 120):
 
 # Alessio
 def loadN_drones(date):
-    url = 'http://order-manager:8080/loadN_drones'
+    url = 'http://data-manager:8080/loadN_drones'
     response = requests.post(url, json={'date': date})
     return response.json()['n_drones']
 
 def saveN_drones(date, n_drones):
-    url = 'http://order-manager:8080/saveN_drones'
+    url = 'http://data-manager:8080/saveN_drones'
     response = requests.post(url, json={'date': date,'n_drones':n_drones})
     return response.text
 
 def loadSchedule():
-    url = 'http://order-manager:8080/loadSchedule'
+    url = 'http://data-manager:8080/loadSchedule'
     response = requests.get(url)
     return response.json()
 
 def emptySchedule():
-    url = 'http://order-manager:8080/emptySchedule'
+    url = 'http://data-manager:8080/emptySchedule'
     response = requests.get(url)
     return response.text
 
 def saveSchedule(schedule):
-    url = 'http://order-manager:8080/saveSchedule'
+    url = 'http://data-manager:8080/saveSchedule'
     response = requests.post(url, json={'schedule': schedule})
     return response.text
 
@@ -132,19 +132,19 @@ def updateDateTime(date, time, minutes=1):
 
     return date, time
 
-#function that asks to order-manager for all orders of the day passed as parameter and return a list of struct, each struct is an order.
+#function that asks to data-manager for all orders of the day passed as parameter and return a list of struct, each struct is an order.
 def getOrdersOfTheDay(day):
-    url = 'http://order-manager:8080/getOrdersOfTheDay'
+    url = 'http://data-manager:8080/getOrdersOfTheDay'
     response = requests.post(url, json={'delivery_date': day})
     return response.json()
 
-#function that asks to order-manager to modify the Status of all lines having ID_Order and Num_Package
+#function that asks to data-manager to modify the Status of all lines having ID_Order and Num_Package
 def updateStatusOfProducts(order_package, status):
     # These will be the parameters of the request
     order_package = "PROVA01_1"
     status = "Delivered"
 
-    url = 'http://order-manager:8080/updateStatusProducts'
+    url = 'http://data-manager:8080/updateStatusProducts'
     response = requests.post(url, json={'order-package': order_package, "status": status})
 
 if __name__ == '__main__':

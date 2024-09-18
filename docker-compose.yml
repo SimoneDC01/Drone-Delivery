@@ -26,11 +26,11 @@ services:
     networks:
       - dd-network
 
-  order-manager:
-    build: order-manager
-    container_name: order-manager
+  data-manager:
+    build: data-manager
+    container_name: data-manager
     volumes:
-      - ./order-manager:/app
+      - ./data-manager:/app
     networks:
       - dd-network
 
