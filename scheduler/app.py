@@ -6,64 +6,120 @@ app = Flask(__name__)
 #route that takes the time advanced from container time 
 @app.route('/advance', methods=['POST'])
 def advance():
+    # These will be the parameters of the request
     date = {'day': 21, 'month': 9, 'year': 2024} # {'day': int, 'month': int, 'year': int}
-    time = {'hh': 12, 'mm': 0} # {'hh': int, 'mm': int}
+    time = {'hh': 10, 'mm': 30} # {'hh': int, 'mm': int}
     minutes = 30 #request.get_json()['minutes'] # int
     
-    orders = getOrdersOfTheDay(date) # address, order_date_time{day, month, year, hh, mm}, delivery_date{day, month, year}, order_id, num_packages, priority
-    print(orders)
-
-    n_drones = 10 # need a database to store calculated number of drones and the schedule
-    schedule = {'drone1': [{'1_1': {'start': '10:30', 'end': '11:00'}}, {'1_2': {'start': '11:00', 'end': '11:45'}}],
-                'drone2': [{'1_3': {'start': '10:00', 'end': '10:40'}}, {'1_4': {'start': '10:40', 'end': '12:00'}}],
-                'drone3': [{'1_5': {'start': '10:00', 'end': '11:30'}}, {'1_6': {'start': '11:30', 'end': '12:00'}}],
-                }
+    # Database: n_drones(date, n_drones), schedule(order_package, drone_id, start_time, end_time)
+    n_drones = 3 # load from database
+    schedule = {'drone1': [{'index': '1_1', 'time': {'start': '10:30', 'end': '11:00'}}, {'index': '1_2', 'time': {'start': '11:00', 'end': '11:45'}}], 
+                'drone2': [{'index': '1_3', 'time': {'start': '10:00', 'end': '10:40'}}, {'index': '1_4', 'time': {'start': '10:40', 'end': '12:00'}}],
+                'drone3': [{'index': '1_5', 'time': {'start': '10:00', 'end': '11:30'}}, {'index': '1_6', 'time': {'start': '11:30', 'end': '12:00'}}],
+                } # load from database
 
     url = 'http://drones:8080/advance'
 
-    for minute in range(minutes):
-        data = {'schedule': schedule, 'time': time}
-        response = requests.post(url, json=data)
-        info = response.text # {drone1: {battery1 : value, battery2 : value, status : value(charging , delivering, going_back), is_strong_wind : value }, drone2 : {battery1 : value, battery2 : value, status : value(charging , delivering, going_back), is_strong_wind : value }, ... }
-        
-        # update schedule
-        schedule = updateSchedule(schedule, info)
-        # update time
-        date, time = updateDateTime(date, time)
-            
+    for _ in range(minutes):
+        if time['hh'] >= 8 and time['hh'] < 20:
+            data = {'schedule': schedule, 'time': time}
+            response = requests.post(url, json=data)
+            info = response.text # {drone1: {battery1 : value, battery2 : value, status : value(charging , delivering, going_back), is_strong_wind : value }, drone2 : {battery1 : value, battery2 : value, status : value(charging , delivering, going_back), is_strong_wind : value }, ... }
 
+            date, time = updateDateTime(date, time)
+            schedule = updateSchedule(schedule, info)
+            saveSchedule(schedule)
+        else:
+            date, time = updateDateTime(date, time)
+            if time['hh'] == 0 and time['mm'] == 0:
+                n_drones, schedule = createDailySchedule(date)
+                saveSchedule(schedule)
 
-    return response.text + '[SCHEDULER]'
+    return 'Advanced'
+
+def createDailySchedule(date):
+    orders = getOrdersOfTheDay(date) # [{order_date_time{}, delivery_date{}, order_id, address, num_packages, priority}, ...]
+    n_packages = sum([order['num_packages'] for order in orders])
+    # TODO: Implement random duration for each order
+    # TODO: Implement priority-based scheduling
+
+    # Start: 9:00    End: 18:00    Extra: 20:00
 
 def updateSchedule(schedule, info):
-    return {'drone1': [{'1_1': {'start': '10:30', 'end': '11:00'}}, {'1_2': {'start': '11:00', 'end': '11:45'}}],
-            'drone2': [{'1_3': {'start': '10:00', 'end': '10:40'}}, {'1_4': {'start': '10:40', 'end': '12:00'}}],
-            'drone3': [{'1_5': {'start': '10:00', 'end': '11:30'}}, {'1_6': {'start': '11:30', 'end': '12:00'}}],
+    return {'drone1': [{'index': '1_1', 'time': {'start': '10:30', 'end': '11:00'}}, {'index': '1_2', 'time': {'start': '11:00', 'end': '11:45'}}],
+            'drone2': [{'index': '1_3', 'time': {'start': '10:00', 'end': '10:40'}}, {'index': '1_4', 'time': {'start': '10:40', 'end': '12:00'}}],
+            'drone3': [{'index': '1_5', 'time': {'start': '10:00', 'end': '11:30'}}, {'index': '1_6', 'time': {'start': '11:30', 'end': '12:00'}}],
             }
 
-def updateDateTime(date, time, minutes = 1):
+# Alessio
+def loadN_drones(date):
+    url = 'http://order-manager:8080/loadN_drones'
+    response = requests.post(url, json={'date': date})
+    return response.text
+
+# Alessio -> Output format in updateSchedule order_by time
+def loadSchedule():
+    url = 'http://order-manager:8080/loadSchedule'
+    response = requests.get(url)
+    return response.text
+
+# Alessio -> Empty the database
+def emptySchedule():
+    url = 'http://order-manager:8080/emptySchedule'
+    response = requests.get(url)
+    return response.text
+
+# Alessio -> Input format in updateSchedule, Empty database before saving
+def saveSchedule(schedule):
+    url = 'http://order-manager:8080/saveSchedule'
+    response = requests.post(url, json={'schedule': schedule})
+    return response.text
+
+def updateDateTime(date, time, minutes=1):
+    # Aggiungi i minuti
     time['mm'] += minutes
+
+    # Gestisci il rollover dei minuti in ore
     if time['mm'] >= 60:
-        time['mm'] -= 60
-        time['hh'] += 1
-        if time['hh'] >= 24:
-            time['hh'] -= 24
-            date['day'] += 1
-            if date['day'] > 31:
-                date['day'] -= 31
-                date['month'] += 1
-            elif date['day'] > 30 and date['month'] in [4, 6, 9, 11]:
-                date['day'] -= 30
-                date['month'] += 1
-            elif date['day'] > 29 and date['month'] == 2 and date['year'] % 4 == 0 and (date['year'] % 100 != 0 or date['year'] % 400 == 0):
-                date['day'] -= 29
-                date['month'] += 1
-            elif date['day'] > 28 and date['month'] == 2:
-                date['day'] -= 28
-                date['month'] += 1
-            if date['month'] > 12:
-                date['month'] -= 12
-                date['year'] += 1
+        extra_hours = time['mm'] // 60
+        time['mm'] %= 60
+        time['hh'] += extra_hours
+
+    # Gestisci il rollover delle ore in giorni
+    if time['hh'] >= 24:
+        extra_days = time['hh'] // 24
+        time['hh'] %= 24
+        date['day'] += extra_days
+
+    # Determina se l'anno è bisestile
+    is_leap_year = date['year'] % 4 == 0 and (date['year'] % 100 != 0 or date['year'] % 400 == 0)
+
+    # Determina il numero di giorni nel mese corrente
+    if date['month'] in [4, 6, 9, 11]:
+        days_in_current_month = 30
+    elif date['month'] == 2:
+        days_in_current_month = 29 if is_leap_year else 28
+    else:
+        days_in_current_month = 31
+
+    # Gestisci il rollover dei giorni nei mesi
+    while date['day'] > days_in_current_month:
+        date['day'] -= days_in_current_month
+        date['month'] += 1
+
+        # Se il mese supera 12, incrementa l'anno e ripristina il mese a 1
+        if date['month'] > 12:
+            date['month'] = 1
+            date['year'] += 1
+
+        # Ricalcola i giorni nel nuovo mese
+        if date['month'] in [4, 6, 9, 11]:
+            days_in_current_month = 30
+        elif date['month'] == 2:
+            days_in_current_month = 29 if is_leap_year else 28
+        else:
+            days_in_current_month = 31
+
     return date, time
 
 #function that asks to order-manager for all orders of the day passed as parameter and return a list of struct, each struct is an order.
@@ -73,10 +129,12 @@ def getOrdersOfTheDay(day):
     return response.text
 
 #function that asks to order-manager to modify the Status of all lines having ID_Order and Num_Package
-def UpdateStatusOfProducts():
-    url = 'http://order-manager:8080/UpdateStatusProducts'
+def updateStatusOfProducts():
+    # These will be the parameters of the request
     order_package = "PROVA01_1"
     status = "Delivered"
+
+    url = 'http://order-manager:8080/updateStatusProducts'
     response = requests.post(url, json={'order-package': order_package, "status": status})
     print(response.text)
 
