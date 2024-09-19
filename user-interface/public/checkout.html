@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+</head>
+<body>
+    <h1>Insert delivery_address</h1>
+    <form id="checkoutForm">
+        <input type="text" id="firstname" placeholder="Enter your first name">
+        <input type="text" id="lastname" placeholder="Enter your last name">
+        <input type="text" id="address" placeholder="Enter your address">
+        <input type="text" id="city" placeholder="Enter your city">
+        <input type="text" id="region" placeholder="Enter your region">
+        <input type="text" id="country" placeholder="Enter your country">
+        <input type="text" id="zip" placeholder="Enter your zip code">
+        <button type="submit">Proceed</button>
+    </form>
+</body>
+<script>
+    document.getElementById('checkoutForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('firstname').value;
+            const lastname = document.getElementById('lastname').value;
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const region = document.getElementById('region').value;
+            const country = document.getElementById('country').value;
+            const zip = document.getElementById('zip').value;
+
+            const finalString = name + ', ' + lastname + ', ' + address + ', ' + city + ', ' + region + ', ' + country + ', ' + zip;
+
+            fetch(`http://localhost:3000/sendAddressInfo?address=${finalString}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+</script>
+</html>

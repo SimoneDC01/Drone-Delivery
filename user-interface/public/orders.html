@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order</title>
+</head>
+<body>
+    <form id="prodForm">
+
+        <h1>Insert Product</h1>
+        <input type="text" id="prodInput" placeholder="Enter the product id">
+
+        <h1>Priority</h1>
+        <input type="range" id="slider" min="0" max="5" value="3" step="1" oninput="updateValue(this.value)">
+        <span id="sliderValue">3</span>
+
+        <button type="submit">Next</button>
+    </form>
+
+
+    <script>
+
+        const socket = new WebSocket('ws://localhost:3000');
+
+        // Gestisci la ricezione di messaggi dal server
+        socket.onmessage = function(event) {
+            // Mostra un alert con il messaggio ricevuto dal server
+            alert(event.data);
+        };
+
+        socket.onerror = function(error) {
+            console.error('Errore WebSocket', error);
+        };
+
+        fetch(`http://localhost:3000/date_and_time_request`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+    
+    document.getElementById('prodForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const name = document.getElementById('prodInput').value;
+    const priority = document.getElementById('slider').value;
+    const prodList = name.split(',');
+
+    fetch(`http://localhost:3000/getProductsInfo?asins=${prodList}&priority=${priority}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())  // supponendo che il server restituisca JSON
+    .then(data => {
+        // Apri la nuova finestra senza parametri URL
+        const newWindow = window.open('http://localhost:3000/confirm', '_blank');
+
+        // Invia i dati alla nuova finestra
+        newWindow.onload = function() {
+            newWindow.postMessage({ data: data}, '*');
+        };
+    }).catch(error => {
+        alert('Error: ' + error.message);
+    });
+});
+
+
+    function updateValue(value) {
+        document.getElementById("sliderValue").innerText = value;
+    }
+    </script>
+
+</body>
+</html>
