@@ -14,20 +14,20 @@ def advance():
     time = {'hh': 10, 'mm': 30} # {'hh': int, 'mm': int}
     minutes = 30 #request.get_json()['minutes'] # int
     
-    # Database: n_drones(date, n_drones), schedule(order_package, drone_id, start_time, end_time)
+    # Database: n_drones(date, n_drones), schedule(order_package, drone_id, start_time, end_time, duration, priority)
     n_drones = loadN_drones(date)
     schedule = loadSchedule()
 
     url = 'http://drones:8080/advance'
 
     for _ in range(minutes):
-        if time['hh'] >= 8 and time['hh'] < 20:
+        if time['hh'] >= 8 and time['hh'] < 19:
             data = {'schedule': schedule, 'time': time}
             response = requests.post(url, json=data)
-            info = response.text # {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
+            info = response.json() # {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
 
             date, time = updateDateTime(date, time)
-            schedule = updateSchedule(schedule, info)
+            schedule = updateSchedule(n_drones, schedule, info, date, time)
             saveSchedule(schedule)
         else:
             date, time = updateDateTime(date, time)
@@ -48,62 +48,104 @@ def createDailySchedule(date):
             packages[order_package] = {'priority': order['priority'], 'duration': generate_truncated_gaussian_value()} # {order_package: {priority: int, duration: int}, ...}
 
     total_duration = sum([package['duration'] for package in packages.values()])
-    print(total_duration / 540, math.ceil(total_duration / 540))
     n_drones = math.ceil(total_duration / 540) # 9 hours = 540 minutes
 
-    # Start: 9:00    End: 18:00    Extra: 20:00
+    # Start: 9:00    End: 18:00
 
     schedule = None
     while not schedule:
         schedule = getOptimizedGreedySchedule(n_drones, packages, date)
         if not schedule: n_drones += 1
-
-    print(n_drones)
+  
     for drone, drone_schedule in schedule.items():
         print(drone)
         for event in drone_schedule:
             print(event)
     return n_drones, schedule
 
-def getOptimizedGreedySchedule(n_drones, packages, date):
+def getOptimizedGreedySchedule(n_drones, packages, date, end_times = None, batteries = None, schedule = None, limited = True):
     # Sort packages by priority and then by duration
     packages = dict(sorted(packages.items(), key=lambda item: (item[1]['priority'], item[1]['duration']), reverse=True))
-    end_times = {f'drone{i + 1}': {'hh': 9, 'mm': 0} for i in range(n_drones)} # {drone1: {hh: int, mm: int}, ...}
-    batteries = {f'drone{i + 1}': 120 for i in range(n_drones)} # {drone1: int, ...}
-    schedule = {f'drone{i + 1}': [] for i in range(n_drones)} # {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
+
+    if end_times == None: end_times = {f'drone{i + 1}': {'hh': 9, 'mm': 0} for i in range(n_drones)} # {drone1: {hh: int, mm: int}, ...}
+    if batteries == None: batteries = {f'drone{i + 1}': (240, 120) for i in range(n_drones)} # {drone1: int, ...}
+    if schedule == None: schedule = {f'drone{i + 1}': [] for i in range(n_drones)} # {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
 
     for order_package, p_d in packages.items():
         duration = p_d['duration']
+        priority = p_d['priority']
+
         virtual_end_times = end_times.copy()
         for drone, battery in batteries.items():
-            if battery < duration:
-                recharge_time = math.ceil((duration - battery) / 3) # Recharge is 3x faster than discharge
+            standard_battery = battery[0]
+            auxiliary_battery = battery[1]
+            lowest_battery = min(standard_battery, auxiliary_battery)
+            if lowest_battery < duration:
+                recharge_time = math.ceil((duration - lowest_battery) / 3) # Recharge is 3x faster than discharge
                 virtual_end_date, virtual_end_times[drone] = updateDateTime(date, end_times[drone], recharge_time)
                 if virtual_end_date != date: return None
 
         chosen = min(end_times, key=lambda drone: (virtual_end_times[drone]['hh'], virtual_end_times[drone]['mm']))
         if virtual_end_times[chosen] != end_times[chosen]:
             time_diff = (virtual_end_times[chosen]['hh'] - end_times[chosen]['hh']) * 60 + (virtual_end_times[chosen]['mm'] - end_times[chosen]['mm'])
-            batteries[chosen] = min(batteries[chosen] + time_diff * 3, 120) # Recharge is 3x faster than discharge
-            schedule[chosen].append({'index': 'recharge', 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(virtual_end_times[chosen]['hh']).zfill(2)}:{str(virtual_end_times[chosen]['mm']).zfill(2)}"}})
+            schedule[chosen].append({'index': 'recharge', 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(virtual_end_times[chosen]['hh']).zfill(2)}:{str(virtual_end_times[chosen]['mm']).zfill(2)}"}, 'duration': time_diff, 'priority': 'standard' if batteries[chosen][0] < batteries[chosen][1] else 'auxiliary'})
+            batteries[chosen] = min(batteries[chosen][0] + time_diff * 3, 240), min(batteries[chosen][1] + time_diff * 3, 120) # Recharge is 3x faster than discharge
             end_times[chosen] = virtual_end_times[chosen]
 
         new_date, new_end_time = updateDateTime(date, end_times[chosen], duration)
         if new_date != date: return None
-        if new_end_time['hh'] >= 18: return None
+        if limited and new_end_time['hh'] >= 18: return None
 
-        schedule[chosen].append({'index': order_package, 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(new_end_time['hh']).zfill(2)}:{str(new_end_time['mm']).zfill(2)}"}})
+        schedule[chosen].append({'index': order_package, 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(new_end_time['hh']).zfill(2)}:{str(new_end_time['mm']).zfill(2)}"}, 'duration': duration, 'priority': priority})
         end_times[chosen] = new_end_time
-        batteries[chosen] -= duration
+        batteries[chosen] = batteries[chosen][0] - duration, batteries[chosen][1]
 
     return schedule
 
-# TODO
-def updateSchedule(schedule, info):
+def updateSchedule(n_drones, schedule, info, date, time):
+    # INFO {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
+    # PACKAGES {order_package: {priority: int, duration: int}, ...}
+    # END_TIMES # {drone1: {hh: int, mm: int}, ...}
+    # BATTERIES # {drone1: (int, int), ...}
+    # SCHEDULE # {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
+
+    '''
+    to_update = False
+
+    for drone, drone_info in info.items():
+        if drone_info['is_strong_wind']:
+            to_update = True
+            break
+
+    if not to_update: return schedule
+    '''
+    
+    for drone, drone_info in info.items():
+
+        current_package_index, current_package = getCurrentPackage(schedule[drone], time)
+        
+        # TODO: Append packages after current_package to packages (use index!)
+        # TODO: Set end_times to end of current_package
+        # TODO: Set batteries to info['drone']['battery1'], info['drone']['battery2']
+        # TODO: Isolate the past/present schedule from the future schedule
+        # TODO: Call getOptimizedGreedySchedule
+
+
     return {'drone1': [{'index': '1_1', 'time': {'start': '10:30', 'end': '11:00'}}, {'index': '1_2', 'time': {'start': '11:00', 'end': '11:45'}}],
             'drone2': [{'index': '1_3', 'time': {'start': '10:00', 'end': '10:40'}}, {'index': '1_4', 'time': {'start': '10:40', 'end': '12:00'}}],
             'drone3': [{'index': '1_5', 'time': {'start': '10:00', 'end': '11:30'}}, {'index': '1_6', 'time': {'start': '11:30', 'end': '12:00'}}],
             }
+
+def getCurrentPackage(packages, time):
+    for i, package in enumerate(packages):
+        start_hh, start_mm = int(package['time']['start'].split(':')[0]), int(package['time']['start'].split(':')[1])
+        end_hh, end_mm = int(package['time']['end'].split(':')[0]), int(package['time']['end'].split(':')[1])
+        start_minutes = start_hh * 60 + start_mm
+        end_minutes = end_hh * 60 + end_mm
+        current_minutes = time['hh'] * 60 + time['mm']
+        if start_minutes <= current_minutes < end_minutes:
+            return i, package
+    return None
 
 # Function to generate a truncated discrete Gaussian value
 def generate_truncated_gaussian_value(mu = 60, min_val = 20, max_val = 120):
@@ -187,6 +229,7 @@ def getOrdersOfTheDay(day):
     response = requests.post(url, json={'delivery_date': day})
     return response.json()
 
+# TODO
 #function that asks to data-manager to modify the Status of all lines having ID_Order and Num_Package
 def updateStatusOfProducts(order_package, status):
     # These will be the parameters of the request
