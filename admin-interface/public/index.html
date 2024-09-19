@@ -6,7 +6,7 @@
     <title>Simple Form</title>
 </head>
 <body>
-
+    <div id="time"></div>
     <h1>Insert minutes</h1>
     <form id="advanceform">
         <input type="text" id="minutes" placeholder="30 min">
@@ -23,7 +23,7 @@
                     })
                     .then(response => response.text())
                     .then(data => {
-                        alert(data);
+                        document.getElementById('time').innerHTML = data;
                     }).catch(error => {
                         alert('Error: ' + error.message);
                     });
@@ -41,7 +41,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                alert(data);
+                document.getElementById('time').innerHTML = data;
             }).catch(error => {
                 alert('Error: ' + error.message);
             });

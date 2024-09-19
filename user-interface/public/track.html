@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Form</title>
 </head>
 <body>
     <h1>Insert Order_id</h1>
@@ -11,6 +10,8 @@
         <input type="text" id="orderInput" placeholder="Enter your name">
         <button type="submit">Send</button>
     </form>
+    <div id="content"></div>
+    <button onclick="window.location.href='http:\/\/localhost:3000'">Back to orders</button>
 </body>
 <script>
     document.getElementById('orderForm').addEventListener('submit', function(event) {
@@ -25,7 +26,7 @@
             })
             .then(response => response.text())
             .then(data => {
-                alert(data);
+                document.getElementById('content').innerHTML = data;
             }).catch(error => {
                 alert('Error: ' + error.message);
             });

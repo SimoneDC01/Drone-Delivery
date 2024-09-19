@@ -7,21 +7,82 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ noServer: true });
 const clients = [];
 app.use(express.json());
-
-
+app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) =>{ 
     const filePath = path.resolve("public", 'orders.html');
     res.sendFile(filePath);
 });
-
+app.get('/track',(req,res)=>{
+    const filePath = path.resolve("public", 'track.html');
+    res.sendFile(filePath);
+})
 app.get('/checkout', (req, res) =>{ 
     const filePath = path.resolve("public", 'checkout.html');
     res.sendFile(filePath);
 });
 
-app.get('/confirm', (req, res) =>{ 
-    const filePath = path.resolve("public", 'confirm.html');
-    res.sendFile(filePath);
+app.post('/confirm', (req, res) => {
+    try {
+        // Controlla se i dati sono presenti
+        const data = req.body.data ? JSON.parse(req.body.data) : null;
+        
+        if (!data) {
+            return res.status(400).send('No data provided');
+        }
+
+        // Restituisci la pagina HTML con i dati
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Confirm</title>
+            </head>
+            <body>
+                <div id="content">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>  <!-- Mostra i dati in formato JSON -->
+                </div>
+                <button onclick="window.location.href='http://localhost:3000/checkout'">Go to checkout</button>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        res.status(500).send('Error parsing JSON data');
+    }
+});
+
+
+
+app.post('/thankyou', (req, res) =>{ 
+    try {
+        // Controlla se i dati sono presenti
+        const data = req.body.data ? JSON.parse(req.body.data) : null;
+        
+        if (!data) {
+            return res.status(400).send('No data provided');
+        }
+
+        // Restituisci la pagina HTML con i dati
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Confirm</title>
+            </head>
+            <body>
+                <div id="content">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>  <!-- Mostra i dati in formato JSON -->
+                </div>
+                <button onclick="window.location.href='http://localhost:3000'">Back to orders</button>
+            </body>
+            </html>
+        `);
+    } catch (error) {
+        res.status(500).send('Error parsing JSON data');
+    }
 });
 
 app.get('/getDeliveryInfo', (req, res) => {
@@ -47,7 +108,6 @@ app.get('/getProductsInfo', (req, res) => {
     const name = req.query.asins;
     const priority = req.query.priority
     const payload = { asins: name, priority: priority };
-    
     fetch(`http://user-manager:8080/getProductsInfo`, {
         method: 'POST',
         headers: {
@@ -123,7 +183,6 @@ server.on('upgrade', (request, socket, head) => {
 });
 
 wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
     // Gestione dei messaggi WebSocket
     ws.on('message', (message) => {
         console.log(`Received WebSocket message: ${message}`);

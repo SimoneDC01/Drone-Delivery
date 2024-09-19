@@ -39,7 +39,20 @@
             })
             .then(response => response.text())
             .then(data => {
-                alert(data);
+                // Creiamo un form per inviare i dati via POST a confirm
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'http://localhost:3000/thankyou';
+                
+                // Creiamo un input nascosto per passare i dati
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data';
+                input.value = JSON.stringify(data);  // Converti i dati in una stringa JSON
+                form.appendChild(input);
+                // Aggiungiamo il form al body e lo inviamo
+                document.body.appendChild(form);
+                form.submit();
             }).catch(error => {
                 alert('Error: ' + error.message);
             });
