@@ -56,11 +56,7 @@ def createDailySchedule(date):
     while not schedule:
         schedule = getOptimizedGreedySchedule(n_drones, packages, date)
         if not schedule: n_drones += 1
-  
-    for drone, drone_schedule in schedule.items():
-        print(drone)
-        for event in drone_schedule:
-            print(event)
+    
     return n_drones, schedule
 
 def getOptimizedGreedySchedule(n_drones, packages, date, end_times = None, batteries = None, schedule = None, limited = True):
@@ -103,11 +99,11 @@ def getOptimizedGreedySchedule(n_drones, packages, date, end_times = None, batte
     return schedule
 
 def updateSchedule(n_drones, schedule, info, date, time):
-    # INFO {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
-    # PACKAGES {order_package: {priority: int, duration: int}, ...}
-    # END_TIMES # {drone1: {hh: int, mm: int}, ...}
-    # BATTERIES # {drone1: (int, int), ...}
-    # SCHEDULE # {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
+    # INFO        {drone1: {battery1: value, battery2: value, status: value(charging , delivering, going_back), is_strong_wind: value }, ...}
+    # PACKAGES    {order_package: {priority: int, duration: int}, ...}
+    # END_TIMES   {drone1: {hh: int, mm: int}, ...}
+    # BATTERIES   {drone1: (int, int), ...}
+    # SCHEDULE    {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
 
     '''
     to_update = False
@@ -119,22 +115,37 @@ def updateSchedule(n_drones, schedule, info, date, time):
 
     if not to_update: return schedule
     '''
+
+    packages = {}
+    end_times = {}
+    batteries = {}
     
     for drone, drone_info in info.items():
 
-        current_package_index, current_package = getCurrentPackage(schedule[drone], time)
+        current_package_index, current_package = getCurrentPackage(schedule[drone], time) # {'index': 'PROVA01_1', 'time': {'start': '10:15', 'end': '11:25'}, 'duration': 70, 'priority': 4}
         
-        # TODO: Append packages after current_package to packages (use index!)
-        # TODO: Set end_times to end of current_package
-        # TODO: Set batteries to info['drone']['battery1'], info['drone']['battery2']
-        # TODO: Isolate the past/present schedule from the future schedule
-        # TODO: Call getOptimizedGreedySchedule
+        # Dire a Andrea di cambiare in 240 batteria standard massima e chiedere come funziona scambio info e status con drones
 
+        # Append packages after current_package to packages
+        for i in range(current_package_index + 1, len(schedule[drone])):
+            package = schedule[drone][i]
+            if package['index'] == 'recharge': continue
+            packages[package['index']] = {'priority': package['priority'], 'duration': package['duration']}
 
-    return {'drone1': [{'index': '1_1', 'time': {'start': '10:30', 'end': '11:00'}}, {'index': '1_2', 'time': {'start': '11:00', 'end': '11:45'}}],
-            'drone2': [{'index': '1_3', 'time': {'start': '10:00', 'end': '10:40'}}, {'index': '1_4', 'time': {'start': '10:40', 'end': '12:00'}}],
-            'drone3': [{'index': '1_5', 'time': {'start': '10:00', 'end': '11:30'}}, {'index': '1_6', 'time': {'start': '11:30', 'end': '12:00'}}],
-            }
+        # Set end_times[drone] to end of current_package
+        end_times[drone] = {'hh': int(current_package['time']['end'].split(':')[0]), 'mm': int(current_package['time']['end'].split(':')[1])}
+
+        time_diff = (end_times[drone]['hh'] - time['hh']) * 60 + (end_times[drone]['mm'] - time['mm'])
+        
+        # Set batteries to drone_info['battery1'] - time_diff, drone_info['battery2']
+        batteries[drone] = drone_info['battery1'] - time_diff, drone_info['battery2']
+        
+        # Isolate the past/present schedule from the future schedule
+        schedule[drone] = schedule[drone][:current_package_index + 1]
+
+    schedule = getOptimizedGreedySchedule(n_drones, packages, date, end_times, batteries, schedule, limited = False)
+
+    return schedule
 
 def getCurrentPackage(packages, time):
     for i, package in enumerate(packages):
