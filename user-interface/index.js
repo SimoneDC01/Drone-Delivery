@@ -10,11 +10,19 @@ app.use(express.json());
 
 
 app.get('/', (req, res) =>{ 
-    const filePath = path.resolve("public", 'index.html');
+    const filePath = path.resolve("public", 'orders.html');
     res.sendFile(filePath);
 });
 
+app.get('/checkout', (req, res) =>{ 
+    const filePath = path.resolve("public", 'checkout.html');
+    res.sendFile(filePath);
+});
 
+app.get('/confirm', (req, res) =>{ 
+    const filePath = path.resolve("public", 'confirm.html');
+    res.sendFile(filePath);
+});
 
 app.get('/getDeliveryInfo', (req, res) => {
     const name = req.query.order_id;
@@ -34,7 +42,6 @@ app.get('/getDeliveryInfo', (req, res) => {
         res.status(500).json({ error: error.message });
     });
 });
-
 
 app.get('/getProductsInfo', (req, res) => {
     const name = req.query.asins;
@@ -59,7 +66,7 @@ app.get('/getProductsInfo', (req, res) => {
 app.get('/sendAddressInfo', (req, res) => {
     const name = req.query.address;
     const payload = { address: name };
-    
+
     fetch(`http://user-manager:8080/sendAddressInfo`, {
         method: 'POST',
         headers: {
