@@ -2,6 +2,7 @@ from flask import Flask, request
 import requests
 import numpy as np
 import math
+import copy
 
 app = Flask(__name__)
 
@@ -32,6 +33,7 @@ def advance():
             date, time = updateDateTime(date, time)
             if time['hh'] == 0 and time['mm'] == 0:
                 n_drones, schedule = createDailySchedule(date)
+                saveN_drones(date, n_drones)
                 saveSchedule(schedule)
 
     return 'Advanced'
@@ -46,24 +48,55 @@ def createDailySchedule(date):
             packages[order_package] = {'priority': order['priority'], 'duration': generate_truncated_gaussian_value()} # {order_package: {priority: int, duration: int}, ...}
 
     total_duration = sum([package['duration'] for package in packages.values()])
+    print(total_duration / 540, math.ceil(total_duration / 540))
     n_drones = math.ceil(total_duration / 540) # 9 hours = 540 minutes
 
     # Start: 9:00    End: 18:00    Extra: 20:00
 
-    done = False
-    while not done:
-        done = schedule(n_drones, packages)
-        if not done: n_drones += 1
+    schedule = None
+    while not schedule:
+        schedule = getOptimizedGreedySchedule(n_drones, packages, date)
+        if not schedule: n_drones += 1
 
-    return n_drones, packages
+    print(n_drones)
+    for drone, drone_schedule in schedule.items():
+        print(drone)
+        for event in drone_schedule:
+            print(event)
+    return n_drones, schedule
 
-def schedule(n_drones, packages):
+def getOptimizedGreedySchedule(n_drones, packages, date):
     # Sort packages by priority and then by duration
     packages = dict(sorted(packages.items(), key=lambda item: (item[1]['priority'], item[1]['duration']), reverse=True))
+    end_times = {f'drone{i + 1}': {'hh': 9, 'mm': 0} for i in range(n_drones)} # {drone1: {hh: int, mm: int}, ...}
+    batteries = {f'drone{i + 1}': 120 for i in range(n_drones)} # {drone1: int, ...}
+    schedule = {f'drone{i + 1}': [] for i in range(n_drones)} # {drone1: [{index: str, time: {start: str, end: str}}, ...], ...}
 
-    # TODO: Implement the greedy load balancing algorithm
+    for order_package, p_d in packages.items():
+        duration = p_d['duration']
+        virtual_end_times = end_times.copy()
+        for drone, battery in batteries.items():
+            if battery < duration:
+                recharge_time = math.ceil((duration - battery) / 3) # Recharge is 3x faster than discharge
+                virtual_end_date, virtual_end_times[drone] = updateDateTime(date, end_times[drone], recharge_time)
+                if virtual_end_date != date: return None
 
-    return True
+        chosen = min(end_times, key=lambda drone: (virtual_end_times[drone]['hh'], virtual_end_times[drone]['mm']))
+        if virtual_end_times[chosen] != end_times[chosen]:
+            time_diff = (virtual_end_times[chosen]['hh'] - end_times[chosen]['hh']) * 60 + (virtual_end_times[chosen]['mm'] - end_times[chosen]['mm'])
+            batteries[chosen] = min(batteries[chosen] + time_diff * 3, 120) # Recharge is 3x faster than discharge
+            schedule[chosen].append({'index': 'recharge', 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(virtual_end_times[chosen]['hh']).zfill(2)}:{str(virtual_end_times[chosen]['mm']).zfill(2)}"}})
+            end_times[chosen] = virtual_end_times[chosen]
+
+        new_date, new_end_time = updateDateTime(date, end_times[chosen], duration)
+        if new_date != date: return None
+        if new_end_time['hh'] >= 18: return None
+
+        schedule[chosen].append({'index': order_package, 'time': {'start': f"{str(end_times[chosen]['hh']).zfill(2)}:{str(end_times[chosen]['mm']).zfill(2)}", 'end': f"{str(new_end_time['hh']).zfill(2)}:{str(new_end_time['mm']).zfill(2)}"}})
+        end_times[chosen] = new_end_time
+        batteries[chosen] -= duration
+
+    return schedule
 
 # TODO
 def updateSchedule(schedule, info):
@@ -107,6 +140,9 @@ def saveSchedule(schedule):
     return response.text
 
 def updateDateTime(date, time, minutes = 1):
+    date = copy.deepcopy(date)
+    time = copy.deepcopy(time)
+
     time['mm'] += minutes
 
     if time['mm'] >= 60:
