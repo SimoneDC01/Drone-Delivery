@@ -82,7 +82,7 @@ def advance():
         for package in schedule[drone] :
             if(time<extract_time(package['time']['end'])):
                 # the drone is charging
-                if(package['index'] == '-1_-1') :
+                if(package['index'] == 'recharge') :
                     my_drones[drone].status = CHARGING
                     my_drones[drone].is_strong_wind = False
                     my_drones[drone].states_history.append(0)
