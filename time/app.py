@@ -60,7 +60,7 @@ def getDeliveryInfo():
 
     url = 'http://scheduler:8080/advance'
     data = {'minutes': minutes, 'date': date, 'time' : time}
-    response = requests.post(url, json=data)
+    schedule = requests.post(url, json=data)
 
     #update of date and time
     update_query = "UPDATE time SET date = ?, time = ?"
@@ -72,7 +72,7 @@ def getDeliveryInfo():
     url = 'http://user-manager:8080/date_and_time_new'
     data = {'date_and_time': new_date+" "+new_time}
     requests.post(url, json=data)
-    return jsonify({'date': new_date, 'time': new_time})
+    return jsonify({'date': new_date, 'time': new_time,'schedule':schedule.text})
 
 @app.route('/date_and_time_request', methods=['POST'])
 def date_and_time_request():

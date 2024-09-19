@@ -36,7 +36,7 @@ def advance():
                 saveN_drones(date, n_drones)
                 saveSchedule(schedule)
 
-    return 'Advanced'
+    return schedule
 
 def createDailySchedule(date):
     orders = getOrdersOfTheDay(date) # [{order_date_time{}, delivery_date{}, order_id, address, num_packages, priority}, ...]
