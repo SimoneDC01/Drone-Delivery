@@ -244,12 +244,13 @@ def saveSchedule():
                 order_package = task['index']
                 start_time = task['time']['start']
                 end_time = task['time']['end']
-
+                duration=task['duration']
+                priority=task['priority']
                 # Inserisci i dati nella tabella schedule
                 cursor.execute('''
-                    INSERT INTO schedule (order_package, drone_id, start, end)
-                    VALUES (?, ?, ?, ?)
-                ''', (order_package, drone_id, start_time, end_time))
+                    INSERT INTO schedule (order_package, drone_id, start, end, duration, priority)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (order_package, drone_id, start_time, end_time, duration, priority))
 
         # Salva le modifiche
         conn.commit()
@@ -273,7 +274,7 @@ def loadSchedule():
     
     # Esegui la query per recuperare tutti i record ordinati per drone_id e start
     cursor.execute('''
-        SELECT order_package, drone_id, start, end
+        SELECT order_package, drone_id, start, end, duration, priority
         FROM schedule
         ORDER BY drone_id, start
     ''')
@@ -285,7 +286,7 @@ def loadSchedule():
     schedule = {}
 
     # Itera su ogni record e costruisci la struttura
-    for order_package, drone_id, start_time, end_time in records:
+    for order_package, drone_id, start_time, end_time, duration, priority in records:
         drone_key = f"drone{drone_id}"  # Crea la chiave in base al drone_id
 
         # Se il drone non è già nella struttura, aggiungilo
@@ -298,7 +299,9 @@ def loadSchedule():
             'time': {
                 'start': start_time,
                 'end': end_time
-            }
+            },
+            'duration':duration,
+            'priority':priority
         })
 
     conn.close()
