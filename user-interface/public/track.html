@@ -5,20 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <h1>Insert Order_id</h1>
-    <form id="orderForm">
-        <input type="text" id="orderInput" placeholder="Enter your name">
-        <button type="submit">Send</button>
-    </form>
+    <h1>Your orders</h1>
     <div id="content"></div>
-    <button onclick="window.location.href='http:\/\/localhost:3000'">Back to orders</button>
+    <button onclick="window.location.href='http:\/\/localhost:3000/orders'">Back to orders</button>
 </body>
 <script>
-    document.getElementById('orderForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const name = document.getElementById('orderInput').value;
+    window.onload = function() {
 
-            fetch(`http://localhost:3000/getDeliveryInfo?order_id=${name}`, {
+            fetch(`http://localhost:3000/getDeliveryInfo`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -30,6 +24,6 @@
             }).catch(error => {
                 alert('Error: ' + error.message);
             });
-        });
+    }
 </script>
 </html>

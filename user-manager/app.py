@@ -30,9 +30,9 @@ def get_products_info():
 @app.route('/getDeliveryInfo', methods=['POST'])
 def get_delivery_info():
     data = request.get_json()
-    ID_Order = data['order_id']
+    email = data['email']
     url = 'http://data-manager:8080/getDeliveryInfo'
-    data = {'ID_Order': ID_Order}
+    data = {'email': email}
     response = requests.post(url, json=data)
     return response.json()
 
@@ -41,7 +41,7 @@ def get_delivery_info():
 def send_Address_Info():
     data = request.get_json()
     address = data.get('address')
-
+    email=data.get('email')
     date = date_and_time_request()['date'] 
     time = date_and_time_request()['time']
     dateTime = date + ',' + time
@@ -70,10 +70,10 @@ def send_Address_Info():
     id_order = ''.join(random.choice(caratteri_legibili) for _ in range(10))
 
     url = 'http://data-manager:8080/sendOrder'
-    data = {'Date_time_order': dateTime, 'Delivery_day':delivery_day, 'ID_Order' : id_order, 'Address':address, 'Num_packages':temporary_order_storage['num_packages'], 'Priority':temporary_order_storage['priority'], 'Packages':temporary_order_storage['packages']}
-    #response = requests.post(url, json=data)
-    #return jsonify(response.text)
-    return data
+    data = {'email':email,'Date_time_order': dateTime, 'Delivery_day':delivery_day, 'ID_Order' : id_order, 'Address':address, 'Num_packages':temporary_order_storage['num_packages'], 'Priority':int(temporary_order_storage['priority']), 'Packages':temporary_order_storage['packages']}
+    response = requests.post(url, json=data)
+    
+    return jsonify(data['ID_Order'])
 
 
 @app.route('/date_and_time_request', methods=['POST'])

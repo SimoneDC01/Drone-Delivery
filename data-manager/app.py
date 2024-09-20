@@ -8,6 +8,8 @@ app = Flask(__name__)
 @app.route('/sendOrder', methods=['POST'])
 def sendOrder():
     data = request.get_json()
+    print(data)
+    email=data['email']
     Date_time_order=data['Date_time_order']
     Delivery_day=data['Delivery_day']
     ID_Order=data['ID_Order']
@@ -20,9 +22,9 @@ def sendOrder():
     cursor = conn.cursor()
     # Insert the order into the table
     cursor.execute('''
-        INSERT INTO Orders (Date_time_order, Delivery_day, ID_Order, Address, Num_packages, Priority )
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (Date_time_order, Delivery_day, ID_Order, Address, Num_packages, Priority))
+        INSERT INTO Orders (Date_time_order, Delivery_day, ID_Order, Address, Num_packages, Priority, email )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (Date_time_order, Delivery_day, ID_Order, Address, Num_packages, Priority, email))
 
     # Commit the transaction and close the connection
     conn.commit()
@@ -30,7 +32,7 @@ def sendOrder():
         Num_package=i+1
         for j in range (0,len(Packages[i])):
             Description=Packages[i][j]
-            Status="In Elaborazione"
+            Status="In Process"
 
             cursor.execute('''
             INSERT INTO Products (ID_Order, Num_package, Description, Status )
@@ -129,20 +131,24 @@ def updateStatusProducts():
 @app.route('/getDeliveryInfo', methods=['POST'])
 def get_delivery_info():
     data = request.get_json()
-    ID_Order = data['ID_Order']
+    email = data['email']
     conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT Description, Status  FROM Products WHERE ID_Order = ?
-    ''', (ID_Order,))
+    SELECT p.Description, p.Status, p.ID_Order
+    FROM Products p
+    JOIN Orders o ON p.ID_Order = o.ID_Order
+    WHERE o.email = ?
+''', (email,))
 
     products = cursor.fetchall()
     if products==[]:
-        return "The order does not exists"
+        return []
     products_list = []
     for product in products:
         products_list.append({
+            'ID_Order':product[2],
             'Description':product[0],
             'Status': product[1]
         })
