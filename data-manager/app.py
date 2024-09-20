@@ -8,7 +8,6 @@ app = Flask(__name__)
 @app.route('/sendOrder', methods=['POST'])
 def sendOrder():
     data = request.get_json()
-    print(data)
     email=data['email']
     Date_time_order=data['Date_time_order']
     Delivery_day=data['Delivery_day']
@@ -106,7 +105,7 @@ def getOrdersOfTheDay():
 @app.route('/updateStatusProducts', methods=['POST'])
 def updateStatusProducts():
     data = request.get_json()
-    Order_Package=data['order-package'].split("_",1)
+    Order_Package=data['order-package'].rsplit("_", 1)
     Order=Order_Package[0]
     Package=int(Order_Package[1])
     Status=data['status']

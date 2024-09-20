@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   admin-interface:
     build: admin-interface

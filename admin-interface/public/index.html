@@ -13,6 +13,7 @@
         <button type="submit">Advance</button>
     </form>
     <div id="schedule"></div>
+    <div id="log"></div>
     <script>
 
         fetch(`http://localhost:5000/date_and_time_request`, {
@@ -41,8 +42,9 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('time').innerHTML = data['date']+' ' +data['time'];
-                document.getElementById('schedule').innerHTML = data['schedule'];
+                document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
+                document.getElementById('schedule').innerHTML = JSON.stringify(data['schedule']);
+                document.getElementById('log').innerHTML = JSON.stringify(data['log']);
             }).catch(error => {
                 alert('Error: ' + error.message);
             });

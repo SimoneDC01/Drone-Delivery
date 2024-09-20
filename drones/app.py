@@ -13,12 +13,13 @@ class Drone:
         self.is_strong_wind = False
         self.states_history = [0, 0]
 
-    def __str__(self):
-        return ("{" + f"battery1 : {self.battery1}, battery2 : {self.battery2}, "
-                f"is_strong_wind : {self.is_strong_wind}, states_history : {self.states_history}" + "}")
-    def __repr__(self):
-        return ("{" + f"battery1 : {self.battery1}, battery2 : {self.battery2}, "
-                f"is_strong_wind : {self.is_strong_wind}, states_history : {self.states_history}" + "}")
+    def to_dict(self):
+        return {
+            "battery1": self.battery1,
+            "battery2": self.battery2,
+            "is_strong_wind": self.is_strong_wind,
+            "states_history": self.states_history
+        }
 
 transition_states = {
     (0, 0): [0.95, 0.05],   # From (No Wind, No Wind) to No Wind o Strong Wind
@@ -46,7 +47,8 @@ def extract_time(time):
 # given the package information and the time, return if the drone is delivering or going back
 def going_back(package, time) :
     deliver_duration = extract_time(package['time']['end'])[1] + (extract_time(package['time']['end'])[0] - extract_time(package['time']['start'])[0]) * 60 - extract_time(package['time']['start'])[1]
-    half_delivery_time = extract_time(package['time']['start'])[0] + (deliver_duration/2 + extract_time(package['time']['start'])[1]) // 60, (extract_time(package['time']['start'])[1] + (deliver_duration/2)) % 60
+    half_delivery_time = int(extract_time(package['time']['start'])[0] + (deliver_duration/2 + extract_time(package['time']['start'])[1]) // 60), int((extract_time(package['time']['start'])[1] + (deliver_duration/2)) % 60)
+
     if(time == half_delivery_time) :
         return True
     else :
@@ -64,7 +66,8 @@ app = Flask(__name__)
 @app.route('/advance', methods=['POST'])
 def advance():
     schedule = request.get_json()['schedule']   # {drone1: [{order,package : (start,end)}, {order,package : (start,end)}, ... ], drone2:  [{order,package : (start,end)}, {order,package : (start,end)}, ... ], ... } 
-
+    my_drones = {}
+    to_notify = []
     #print(list(schedule.keys()))
     time = request.get_json()['time']['hh'], request.get_json()['time']['mm']           # {hh : value, mm : value}
     
@@ -75,8 +78,10 @@ def advance():
         if(not drone in my_drones.keys()) :
             my_drones [drone] = Drone()
         # search the current  package of the drone
+        has_finished = True
         for package in schedule[drone] :
             if(time<extract_time(package['time']['end'])):
+                has_finished = False
                 # the drone is charging
                 if(package['index'] == 'recharge') :
                     my_drones[drone].is_strong_wind = False
@@ -102,15 +107,21 @@ def advance():
                         my_drones[drone].is_strong_wind = False
 
                     if going_back(package, time) :
-                        url = 'http://scheduler:8080/delivered'
-                        data = {'order_package': package['index']}
-                        requests.post(url, json=data)
+                        to_notify.append(package['index'])
                     
+
                 break
+        if(has_finished):
+            my_drones[drone].is_strong_wind = False
+        
         
         #finish
 
-    return str(my_drones)                # { 'drone1' : {battery1 : value, battery2 : value, is_strong_wind : value }, 'drone2' : {battery1 : value, battery2 : value, is_strong_wind : value }, ... } 
+    drones_dict = {drone: my_drones[drone].to_dict() for drone in my_drones}
 
+    return jsonify({
+        "info": drones_dict,
+        "to_notify": to_notify
+    })
 if __name__ == '__main__':                      
     app.run(debug=True)
