@@ -67,6 +67,10 @@ app.get('/orders', (req, res) =>{
         const filePath = path.resolve("public", 'orders.html');
             res.sendFile(filePath);
     }
+    else {
+        // Se l'utente non è autenticato, fai una GET a '/'
+        res.redirect('/');  // Puoi cambiare '/' con qualsiasi rotta desideri
+    }
     
 });
 app.get('/track',(req,res)=>{
@@ -74,11 +78,19 @@ app.get('/track',(req,res)=>{
     const filePath = path.resolve("public", 'track.html');
     res.sendFile(filePath);
     }
+    else {
+        // Se l'utente non è autenticato, fai una GET a '/'
+        res.redirect('/');  // Puoi cambiare '/' con qualsiasi rotta desideri
+    }
 })
 app.get('/checkout', (req, res) =>{ 
     if (req.isAuthenticated()){
     const filePath = path.resolve("public", 'checkout.html');
     res.sendFile(filePath);
+    }
+    else {
+        // Se l'utente non è autenticato, fai una GET a '/'
+        res.redirect('/');  // Puoi cambiare '/' con qualsiasi rotta desideri
     }
 });
 
@@ -134,16 +146,85 @@ app.post('/thankyou', (req, res) =>{
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Confirm</title>
+                <title>Thank You</title>
+                <style>
+                    /* Stili di base */
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+        
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #e6f2ff;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        background-image: url('https://example.com/drone-background.jpg'); /* Sostituisci con un URL valido */
+                        background-size: cover;
+                        background-position: center;
+                        color: #333;
+                    }
+        
+                    .container {
+                        text-align: center;
+                        background: rgba(255, 255, 255, 0.9);
+                        padding: 40px;
+                        border-radius: 12px;
+                        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+                        width: 400px;
+                    }
+        
+                    h1 {
+                        font-size: 2.5em;
+                        color: #28a745;
+                        margin-bottom: 20px;
+                    }
+        
+                    p {
+                        font-size: 1.2em;
+                        margin-bottom: 20px;
+                        color: #333;
+                    }
+        
+                    .order-id {
+                        font-weight: bold;
+                        color: #007bff;
+                        font-size: 1.5em;
+                        margin: 20px 0;
+                    }
+        
+                    button {
+                        background-color: #007bff;
+                        color: white;
+                        font-size: 1.2em;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;
+                        margin-top: 20px;
+                    }
+        
+                    button:hover {
+                        background-color: #0056b3;
+                    }
+        
+                </style>
             </head>
             <body>
-                <div id="content">
-                    <pre>${JSON.stringify(data, null, 2)}</pre>  <!-- Mostra i dati in formato JSON -->
+                <div class="container">
+                    <h1>Thank You!</h1>
+                    <p>Your order has been placed successfully.</p>
+                    <div class="order-id">Order ID: ${data}</div>  <!-- Visualizza l'Order ID in modo prominente -->
+                    <button onclick="window.location.href='http://localhost:3000/orders'">Back to Orders</button>
                 </div>
-                <button onclick="window.location.href='http://localhost:3000/orders'">Back to orders</button>
             </body>
             </html>
         `);
+        
     } catch (error) {
         res.status(500).send('Error parsing JSON data');
     }
@@ -230,10 +311,10 @@ app.get('/date_and_time_request', (req, res) => {
 
 app.post('/date_and_time_new', (req, res) => {
     // Invia il messaggio a tutti i client connessi
-    const { date_and_time } = req.body;
+    const  date_and_time = JSON.stringify(req.body);
     clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(`Messaggio dal server: ${date_and_time}`);
+            client.send(date_and_time);
         }
     });
     res.send('Messaggio inviato ai client connessi');

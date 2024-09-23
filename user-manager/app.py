@@ -86,10 +86,11 @@ def date_and_time_request():
 
 @app.route('/date_and_time_new', methods=['POST'])
 def date_and_time_new():
-    param=request.get_json()["date_and_time"]
+    date=request.get_json()['date']
+    time=request.get_json()['time']
     url = 'http://user-interface:3000/date_and_time_new'
-    data={"date_and_time":param}
-    response=requests.post(url, json=data)
+    response=requests.post(url, json={'date':date, 'time':time})
+    
     return jsonify(response.text + '[USER MANAGER]')
     
    

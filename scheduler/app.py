@@ -36,9 +36,11 @@ def advance():
             response = requests.post(url, json=data).json()
             info = response['info'] # {drone1: {battery1: value, battery2: value, is_strong_wind: value }, ...}
             to_notify = response['to_notify']
+            list_to_update=[]
             for order_package in to_notify:
-                updateStatusOfProducts(order_package, 'delivered')
+                list_to_update.append((order_package,'delivered'))
                 delivered.append(order_package)
+            updateStatusOfProducts(list_to_update)
 
             date, time = updateDateTime(date, time)
 
@@ -47,14 +49,15 @@ def advance():
 
             if schedule != old_schedule:
                 log.append(f"[{str(time['hh']).zfill(2)}:{str(time['mm']).zfill(2)}] Schedule has been recalculated.")
+                list_to_update=[]
                 # SCHEDULE    {drone1: [{index: str, time: {start: str, end: str}, duration: int, priority: int}, ...], ...}
                 for _, packages in schedule.items():
                     for package in packages:
-                        if package['index'] not in delivered:
+                        if package['index'] not in delivered and package['index']!='recharge':
                             start_struct = {'hh': int(package['time']['start'].split(':')[0]), 'mm': int(package['time']['start'].split(':')[1])}
                             estimated_delivery = updateDateTime(date, start_struct, package['duration'] // 2)[1]
-                            # TODO: Append to list and call function only at the end
-                            updateStatusOfProducts(package['index'], f'{str(estimated_delivery["hh"]).zfill(2)}:{str(estimated_delivery["mm"]).zfill(2)}')
+                            list_to_update.append((package['index'],f'{str(estimated_delivery["hh"]).zfill(2)}:{str(estimated_delivery["mm"]).zfill(2)}'))
+                updateStatusOfProducts(list_to_update)
                         
                 today_last_time = getTodayLastTime(schedule)
                 saveSchedule(schedule)
@@ -67,14 +70,14 @@ def advance():
                 delivered.clear()
 
                 n_drones, schedule = createDailySchedule(date)
-
+                list_to_update=[]
                 for _, packages in schedule.items():
                     for package in packages:
-                        if package['index'] not in delivered:
+                        if package['index'] not in delivered and package['index']!='recharge':
                             start_struct = {'hh': int(package['time']['start'].split(':')[0]), 'mm': int(package['time']['start'].split(':')[1])}
                             estimated_delivery = updateDateTime(date, start_struct, package['duration'] // 2)[1]
-                            # TODO: Append to list and call function only at the end
-                            updateStatusOfProducts(package['index'], f'{str(estimated_delivery["hh"]).zfill(2)}:{str(estimated_delivery["mm"]).zfill(2)}')
+                            list_to_update.append((package['index'],f'{str(estimated_delivery["hh"]).zfill(2)}:{str(estimated_delivery["mm"]).zfill(2)}'))
+                updateStatusOfProducts(list_to_update)
 
                 saveN_drones(date, n_drones)
                 saveSchedule(schedule)
@@ -297,9 +300,9 @@ def getOrdersOfTheDay(day):
     return response.json()
 
 #function that asks to data-manager to modify the Status of all lines having ID_Order and Num_Package
-def updateStatusOfProducts(order_package, status):
+def updateStatusOfProducts(list_to_update):
     url = 'http://data-manager:8080/updateStatusProducts'
-    response = requests.post(url, json={'order-package': order_package, "status": status})
+    response = requests.post(url, json={'list_to_update': list_to_update})
 
 if __name__ == '__main__':
     app.run(debug=True)

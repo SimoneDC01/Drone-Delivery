@@ -4,56 +4,206 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #e6f2ff;
+        }
+        #time, #date {
+            position: absolute;
+            left: 40px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        #time {
+            top: 40px;
+            color: #007bff;
+        }
+        #date {
+            top: 60px;
+            color: #007bff;
+        }
+        a {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .input-group button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .input-group button:hover {
+            background-color: #0056b3;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            width: 30%;
+            margin-bottom: 20px;
+        }
+        #sliderValue {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 20px;
+            cursor: pointer;
+            width: 40%; /* Per allineare il pulsante sotto lo slider */
+        }
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-    <div id="time"></div>
-    <a href="http://localhost:3000/track"> Track an order</a>
-    <form id="prodForm">
 
-        <h1>Insert Product</h1>
-        <input type="text" id="prodInput" placeholder="Enter the product id">
+    <div id="time"></div>
+    <div id="date"></div>
+    <a href="http://localhost:3000/track">Track your orders</a>
+
+    <form id="prodForm">
+        <h1>Insert Products</h1>
+
+        <div id="productFields">
+            <div class="input-group">
+                <input type="text" id="prodInput1" class="prodInput" placeholder="Enter the product id">
+                <button type="button" onclick="addProductInput()">+</button>
+            </div>
+        </div>
 
         <h1>Priority</h1>
-        <input type="range" id="slider" min="0" max="5" value="3" step="1" oninput="updateValue(this.value)">
-        <span id="sliderValue">3</span>
+        <div class="slider-container">
+            <input type="range" id="slider" min="0" max="5" value="3" step="1" oninput="updateValue(this.value)">
+            <span id="sliderValue">3</span>
+        </div>
 
         <button type="submit">Next</button>
     </form>
 
-
     <script>
+        let productInputCount = 1;
 
+        // Aggiunge un nuovo campo di input per i prodotti
+        function addProductInput() {
+        productInputCount++;
+        const productFields = document.getElementById('productFields');
+
+        // Disabilita tutti i pulsanti "+" precedenti
+        const allButtons = productFields.querySelectorAll('.input-group button');
+        allButtons.forEach(button => {
+            button.disabled = true;
+        });
+
+        // Crea un nuovo input group
+        const newInputGroup = document.createElement('div');
+        newInputGroup.classList.add('input-group');
+
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.id = `prodInput${productInputCount}`;
+        newInput.classList.add('prodInput');
+        newInput.placeholder = 'Enter the product id';
+
+        const newButton = document.createElement('button');
+        newButton.type = 'button';
+        newButton.innerHTML = '+';
+        newButton.onclick = addProductInput;
+
+        newInputGroup.appendChild(newInput);
+        newInputGroup.appendChild(newButton);
+        productFields.appendChild(newInputGroup);
+    }
         const socket = new WebSocket('ws://localhost:3000');
-
-        // Gestisci la ricezione di messaggi dal server
         socket.onmessage = function(event) {
+            data=JSON.parse(event.data)
             // Mostra un alert con il messaggio ricevuto dal server
-            document.getElementById('time').innerHTML = event.data;
+            document.getElementById('time').innerHTML = data['time'];
+            document.getElementById('date').innerHTML = data['date'];
         };
-
         socket.onerror = function(error) {
             console.error('Errore WebSocket', error);
         };
-
         fetch(`http://localhost:3000/date_and_time_request`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.text())
+            .then(response => response.json())
             .then(data => {
-                document.getElementById('time').innerHTML = data;
+                document.getElementById('time').innerHTML = data['time'];
+                document.getElementById('date').innerHTML = data['date'];
             }).catch(error => {
                 alert('Error: ' + error.message);
             });
-    
     document.getElementById('prodForm').addEventListener('submit', function(event) {
     event.preventDefault();
-    const name = document.getElementById('prodInput').value;
-    const priority = document.getElementById('slider').value;
-    const prodList = name.split(',');
+    const productInputs = document.getElementsByClassName('prodInput');
 
+    // Crea una lista vuota per conservare i valori
+    let prodList = [];
+
+    // Itera attraverso tutti gli input e aggiungi i loro valori alla lista
+    for (let i = 0; i < productInputs.length; i++) {
+        if (productInputs[i].value.trim() !== "") {  // Assicurati che il campo non sia vuoto
+            prodList.push(productInputs[i].value);
+        }
+    }
+    const priority = document.getElementById('slider').value;
+    
     fetch(`http://localhost:3000/getProductsInfo?asins=${prodList}&priority=${priority}`, {
         method: 'GET',
         headers: {
@@ -66,7 +216,6 @@
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = 'http://localhost:3000/confirm';
-        
         // Creiamo un input nascosto per passare i dati
         const input = document.createElement('input');
         input.type = 'hidden';
@@ -80,8 +229,6 @@
         alert('Error: ' + error.message);
     });
 });
-
-
     function updateValue(value) {
         document.getElementById("sliderValue").innerText = value;
     }

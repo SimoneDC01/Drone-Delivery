@@ -51,7 +51,7 @@ def advance():
     conn.close()
 
     url = 'http://user-manager:8080/date_and_time_new'
-    data = {'date_and_time': new_date+" "+new_time}
+    data = {'date': new_date,'time':new_time}
     requests.post(url, json=data)
 
     return jsonify({'date': new_date, 'time': new_time,'schedule': schedule, 'log': log})

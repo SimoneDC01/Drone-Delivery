@@ -22,9 +22,9 @@
                             'Content-Type': 'application/json'
                         }
                     })
-                    .then(response => response.text())
+                    .then(response => response.json())
                     .then(data => {
-                        document.getElementById('time').innerHTML = data;
+                        document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
                     }).catch(error => {
                         alert('Error: ' + error.message);
                     });

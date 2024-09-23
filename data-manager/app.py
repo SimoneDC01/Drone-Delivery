@@ -104,23 +104,36 @@ def getOrdersOfTheDay():
 #route of update of the status of the products
 @app.route('/updateStatusProducts', methods=['POST'])
 def updateStatusProducts():
-    data = request.get_json()
-    Order_Package=data['order-package'].rsplit("_", 1)
-    Order=Order_Package[0]
-    Package=int(Order_Package[1])
-    Status=data['status']
-    # Connect to the SQLite database
-    conn = sqlite3.connect('orders.sqlite')  # 'orders.db' is assumed to be in the same directory
+    conn = sqlite3.connect('orders.sqlite')  # Connessione al database SQLite
     cursor = conn.cursor()
-    # Esegui l'aggiornamento nella tabella Products
-    cursor.execute('''
+
+    # Ottieni la lista da aggiornare dal payload JSON
+    list_to_update = request.get_json()['list_to_update']
+
+    # Prepara una lista per memorizzare i parametri delle query
+    update_data = []
+
+    # Cicla sulla lista per separare Order, Package e Status
+    for tupla in list_to_update:
+        Order_Package = tupla[0].rsplit("_", 1)
+        Order = Order_Package[0]
+        Package = int(Order_Package[1])
+        Status = tupla[1]
+        
+        # Aggiungi i valori a update_data
+        update_data.append((Status, Order, Package))
+
+    # Esegui una singola query batch utilizzando executemany
+    cursor.executemany('''
         UPDATE Products
         SET Status = ?
         WHERE ID_Order = ? AND Num_package = ?
-    ''', (Status, Order, Package))
+    ''', update_data)
 
-    # Commit the transaction and close the connection
+    # Commit della transazione
     conn.commit()
+
+    # Chiudi la connessione
     conn.close()
 
     return 'Products modified'
