@@ -4,51 +4,267 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Form</title>
+    <style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100vh;
+        margin: 0;
+    }
+    h1 {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        color: #007bff;
+    }
+     /* Contenitore per la barra oraria */
+     .timeline-container {
+            width: 100%;
+            height: 50px;
+            position: relative;
+            margin: 20px 0;
+            border-bottom: 2px solid black;
+        }
+
+        /* La barra orizzontale con stanghette */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            height: 100%;
+        }
+
+        /* Ogni ora con la stanghetta */
+        .hour {
+            position: relative;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        /* Linea verticale (stanghetta) per ogni ora */
+        .hour::before {
+            content: '';
+            position: absolute;
+            top: 21%;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 20px;
+            width: 2px;
+            background-color: black;
+        }
+
+        /* Etichetta oraria sotto la stanghetta */
+        .hour-label {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+
+        #log {
+            position: relative; /* Posizionamento per il log */
+            background-color: #e0e0e0; /* Sfondo per il div log */
+        }
+        .log-header {
+            text-align: center;
+            margin-bottom: 10px; /* Spazio sopra il div log */
+        }
+        form {
+            position: absolute;
+            top: 20px;
+            right: 20px; /* Posizione a destra */
+        }
+        #schedule {
+            margin: 20px;
+            max-width: 1200px; /* Adatta la larghezza al design */
+        }
+
+        /* Stile per la riga di ogni drone */
+        .drone-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px; /* Spazio tra le righe */
+        }
+
+        /* Stile per la label del drone */
+        .drone-label {
+            width: 100px; /* Larghezza fissa per le label dei droni */
+            font-weight: bold;
+            margin-right: 20px; /* Spaziatura tra la label e la barra di progresso */
+            text-align: right;  /* Allinea a destra il nome del drone */
+        }
+
+        /* Contenitore delle barre di progresso */
+        .progress {
+            height: 20px; /* Altezza delle barre */
+            background-color: #e0e0e0; /* Sfondo del contenitore delle barre */
+            border-radius: 10px;
+            overflow: hidden; /* Per evitare che le barre superino i bordi */
+            position: relative; /* Necessario per le barre con posizionamento assoluto */
+            flex-grow: 1; /* Occupa lo spazio rimanente a destra della label */
+        }
+
+        /* Stile delle singole barre di progresso */
+        .progress-bar {
+            height: 100%; /* Altezza della barra di progresso */
+            border-radius: 10px;
+            background-color: blue; /* Colore di default */
+        }
+        #time {
+            top: 40px;
+            color: #007bff;
+        }
+
+    </style>
 </head>
 <body>
     <div id="time"></div>
-    <h1>Insert minutes</h1>
-    <form id="advanceform">
+    <form id="advanceform" style="float: right;">
         <input type="text" id="minutes" placeholder="30 min">
         <button type="submit">Advance</button>
     </form>
+    <h1 style="text-align: center;">Admin Console</h1>
     <div id="schedule"></div>
-    <div id="log"></div>
+    <div class="log-header"></div>
+        <h1>Log</h1>
+    </div>
+    <div id="log">
+        Contenuto del log
+    </div>
     <script>
+        // Funzione per convertire l'orario in una percentuale rispetto alla timeline (9:00 - 20:00)
+function timeToPercentage(startTime) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = (hours - 9) * 60 + minutes; // Minuti dall'inizio della giornata (9:00)
+    const percentage = (totalMinutes / 660) * 100;  // Timeline dalle 09:00 alle 20:00 = 660 minuti
+    return percentage;
+}
 
-        fetch(`http://localhost:5000/date_and_time_request`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
-                    }).catch(error => {
-                        alert('Error: ' + error.message);
-                    });
+// Funzione per calcolare la larghezza in percentuale basata sulla durata
+function durationToPercentage(startTime, endTime) {
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    const startTotalMinutes = (startHours - 9) * 60 + startMinutes;
+    const endTotalMinutes = (endHours - 9) * 60 + endMinutes;
+    const durationMinutes = endTotalMinutes - startTotalMinutes;
+    const percentage = (durationMinutes / 660) * 100; // Timeline totale in minuti
+    return percentage;
+}
+
+// Funzione principale per creare i div con le barre di progresso
+function creaDivConProgressBars(schedule) {
+    const container = document.getElementById('schedule');
+    container.innerHTML = ''; // Pulisce il container prima di aggiungere le nuove barre
+
+    for (const [drone, activities] of Object.entries(schedule)) {
+        // Crea un contenitore per la riga del drone
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'drone-row'; // Stile per la riga
+        rowDiv.style.display = 'flex';  // Usa Flexbox per posizionare la label e la progress bar
+
+        // Crea un div per l'etichetta del drone (nome del drone)
+        const labelDiv = document.createElement('div');
+        labelDiv.textContent = drone;
+        labelDiv.className = 'drone-label';  // Stilizzato con CSS
+        rowDiv.appendChild(labelDiv);
+
+        // Crea il contenitore delle barre di progresso per il drone
+        const progressDiv = document.createElement('div');
+        progressDiv.className = 'progress';
+        progressDiv.style.position = 'relative';  // Per posizionare le barre in modo assoluto
+        progressDiv.style.flexGrow = 1;  // Occupa tutto lo spazio disponibile
+
+        // Loop attraverso ogni attività per il drone
+        activities.forEach(activity => {
+            const { time: { start, end }, index, priority } = activity;
+
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.style.position = 'absolute';  // Posiziona la barra all'interno del contenitore
+            progressBar.style.left = timeToPercentage(start) + '%';  // Offset rispetto alla timeline
+            progressBar.style.width = durationToPercentage(start, end) + '%';  // Larghezza della barra
+
+            // Assegna un colore basato sulla priorità o sull'index (opzionale)
+            progressBar.style.backgroundColor = getColorForPriority(priority, index);
+
+            // Tooltip opzionale con index o durata
+            progressBar.title = `Task: ${index}, Priority: ${priority}`;
+
+            progressDiv.appendChild(progressBar);
+        });
+
+        // Aggiungi il div della barra di progresso alla riga
+        rowDiv.appendChild(progressDiv);
+
+        // Aggiungi la riga completa al contenitore principale
+        container.appendChild(rowDiv);
+    }
+}
+
+// Funzione per determinare il colore in base alla priorità (opzionale)
+
+function getColorForPriority(priority, index) {
+    switch (priority) {
+        case 5: 
+            return 'red';       // Alta priorità
+        case 4: 
+            return 'orange';    // Priorità media
+        case 3: 
+            return 'yellow';    // Priorità bassa
+        case 2: 
+            return 'green';     // Priorità minore
+        case 1: 
+            return 'blue';      // Priorità molto bassa
+        case 0: 
+            // Controllo del valore dell'index quando la priorità è 0
+            if (index === 'recharge') {
+                return 'gray';  // Colore specifico per ricarica
+            } else {
+                return 'purple'; // Colore per altri codici con priorità 0
+            }
+        default: 
+            return 'gray';      // Default per casi non gestiti
+    }
+}
 
 
-        document.getElementById('advanceform').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const minutes = document.getElementById('minutes').value;
+    fetch(`http://localhost:5000/date_and_time_request`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
+                }).catch(error => {
+                    alert('Error: ' + error.message);
+                });
 
-            fetch(`http://localhost:5000/advance?minutes=${minutes}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
-                document.getElementById('schedule').innerHTML = JSON.stringify(data['schedule']);
-                document.getElementById('log').innerHTML = JSON.stringify(data['log']);
-            }).catch(error => {
-                alert('Error: ' + error.message);
-            });
-        }); 
+
+    document.getElementById('advanceform').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const minutes = document.getElementById('minutes').value;
+
+        fetch(`http://localhost:5000/advance?minutes=${minutes}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
+            //document.getElementById('schedule').innerHTML = JSON.stringify(data['schedule']);
+            creaDivConProgressBars(data['schedule'])
+            document.getElementById('log').innerHTML = JSON.stringify(data['log']);
+        }).catch(error => {
+            alert('Error: ' + error.message);
+        });
+    }); 
     </script>
 </body>
 </html>
