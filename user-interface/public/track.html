@@ -3,28 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your orders</title>
+    <title>Your Orders</title>
+    <style>
+        /* Stili di base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            width: 80%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-height: 75vh; /* Limita l'altezza della tabella per rimanere visibile */
+            overflow-y: auto; /* Aggiunge uno scroll verticale se necessario */
+        }
+
+        /* Contenitore per lo scroll orizzontale */
+        .scrollable-table {
+            width: 100%;
+            overflow-x: auto; /* Abilita lo scroll orizzontale */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap; /* Impedisce la rottura del testo per mantenere il layout */
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        td:first-child {
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-    <h1>Your orders</h1>
-    <div id="content"></div>
-    <button onclick="window.location.href='http:\/\/localhost:3000/orders'">Back to orders</button>
-</body>
-<script>
-    window.onload = function() {
+    <h1>Your Orders</h1>
 
-            fetch(`http://localhost:3000/getDeliveryInfo`, {
+    <div class="table-container">
+        <div class="scrollable-table">
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="content">
+                    <!-- Dati degli ordini verranno inseriti qui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button onclick="window.location.href='http://localhost:3000/orders'">Back to Orders</button>
+
+    <script>
+        window.onload = function() {
+            fetch('http://localhost:3000/getDeliveryInfo', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.text())
+            .then(response => response.json())
             .then(data => {
-                document.getElementById('content').innerHTML = data;
-            }).catch(error => {
+                const tableBody = document.getElementById('content');
+                let lastOrderID = null; // Variabile per tracciare l'ultimo ID_Order visualizzato
+
+                data.forEach(order => {
+                    const row = document.createElement('tr');
+
+                    // Crea una cella per l'Order ID, mostrandolo solo se è diverso dal precedente
+                    const orderIDCell = document.createElement('td');
+                    if (order.ID_Order !== lastOrderID) {
+                        orderIDCell.textContent = order.ID_Order;
+                        lastOrderID = order.ID_Order;
+                    }
+                    row.appendChild(orderIDCell);
+
+                    // Crea una cella per la Description
+                    const descriptionCell = document.createElement('td');
+                    descriptionCell.textContent = order.Description;
+                    row.appendChild(descriptionCell);
+
+                    // Crea una cella per lo Status
+                    const statusCell = document.createElement('td');
+                    statusCell.textContent = order.Status;
+                    row.appendChild(statusCell);
+
+                    // Aggiunge la riga alla tabella
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
                 alert('Error: ' + error.message);
             });
-    }
-</script>
+        }
+    </script>
+</body>
 </html>

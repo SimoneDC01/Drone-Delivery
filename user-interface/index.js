@@ -112,15 +112,205 @@ app.post('/confirm', (req, res) => {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Confirm</title>
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #f5f5f5;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        padding: 20px;
+                    }
+        
+                    h1 {
+                        color: #007bff;
+                        margin-bottom: 20px;
+                    }
+        
+                    .product-list {
+                        list-style: none;
+                        padding: 0;
+                        margin-bottom: 20px;
+                    }
+        
+                    .product-item {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 10px;
+                    }
+        
+                    .product-item::before {
+                        content: "●";
+                        margin-right: 10px;
+                    }
+        
+                    .product-item.green::before {
+                        color: green;
+                    }
+        
+                    .product-item.red::before {
+                        color: red;
+                    }
+        
+                    .product-item span.green {
+                        color: green;
+                        margin-left: 20px;
+                        font-weight: bold;
+                    }
+        
+                    .product-item span.red {
+                        color: red;
+                        margin-left: 20px;
+                        font-weight: bold;
+                    }
+        
+                    .price-table {
+                        width: 50%;
+                        margin-top: 20px;
+                        border-collapse: collapse;
+                        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+                        background-color: white;
+                    }
+        
+                    .price-table th, .price-table td {
+                        padding: 10px;
+                        border: 1px solid #ddd;
+                        text-align: left;
+                    }
+        
+                    .price-table th {
+                        background-color: #007bff;
+                        color: white;
+                    }
+        
+                    .price-table td {
+                        font-weight: bold;
+                    }
+        
+                    button {
+                        background-color: #28a745;
+                        color: white;
+                        font-size: 1.2em;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        margin-top: 20px;
+                    }
+        
+                    button.disabled {
+                        background-color: gray;
+                        cursor: not-allowed;
+                    }
+        
+                    button:hover:not(.disabled) {
+                        background-color: #218838;
+                    }
+                </style>
             </head>
             <body>
+                <h1>Confirm Your Order</h1>
+                
                 <div id="content">
-                    <pre>${JSON.stringify(data, null, 2)}</pre>  <!-- Mostra i dati in formato JSON -->
+                    <!-- Elenco prodotti -->
+                    <ul class="product-list" id="productList"></ul>
+        
+                    <!-- Tabella del prezzo (visibile solo se problems è vuoto) -->
+                    <table class="price-table" id="priceTable">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Delivery</td>
+                                <td>5.00 €</td>
+                            </tr>
+                            <tr>
+                                <td>Nr of packages (${data.packages.length})</td>
+                                <td id="packagePrice"></td>
+                            </tr>
+                            <tr>
+                                <td>Priority (${data.priority})</td>
+                                <td id="priorityPrice"></td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td id="totalPrice"></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <button onclick="window.location.href='http://localhost:3000/checkout'">Go to checkout</button>
+        
+                <button id="checkoutButton" onclick="window.location.href='http://localhost:3000/checkout'">Go to Checkout</button>
+        
+                <script>
+                    const data = ${JSON.stringify(data)}; // Inseriamo i dati
+                    const productList = document.getElementById('productList');
+                    const priceTable = document.getElementById('priceTable');
+                    const checkoutButton = document.getElementById('checkoutButton');
+        
+                    const problems = data.problems || [];
+        
+                    // Funzione per verificare se un prodotto è in problems
+                    function isProductInProblems(product) {
+                        return problems.find(problem => problem.description === product);
+                    }
+        
+                    if (problems.length === 0) {
+                        // Se non ci sono problemi, mostra i prodotti normalmente
+                        data.packages.forEach(packageGroup => {
+                            packageGroup.forEach(product => {
+                                const li = document.createElement('li');
+                                li.classList.add('product-item', 'green');
+                                li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
+                                productList.appendChild(li);
+                            });
+                        });
+        
+                        // Prezzi
+                        const packagePrice = data.packages.length -1 + '.00 €';
+                        const priorityPrice = data.priority + '.00 €';
+        
+                        // Calcolo totale
+                        const total = 5 + data.packages.length + parseInt(data.priority);
+        
+                        document.getElementById('packagePrice').textContent = packagePrice;
+                        document.getElementById('priorityPrice').textContent = priorityPrice;
+                        document.getElementById('totalPrice').textContent = total + '.00 €';
+                    } else {
+                        // Se ci sono problemi, mostra i prodotti con pallino rosso e scritta rossa
+                        data.packages.forEach(packageGroup => {
+                            packageGroup.forEach(product => {
+                                const li = document.createElement('li');
+                                const problem = isProductInProblems(product);
+                                
+                                if (problem) {
+                                    li.classList.add('product-item', 'red');
+                                    li.innerHTML = product + '<span class="red">' + problem.problem + '</span>';
+                                } else {
+                                    li.classList.add('product-item', 'green');
+                                    li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
+                                }
+        
+                                productList.appendChild(li);
+                            });
+                        });
+        
+                        // Nascondi la tabella dei prezzi e disabilita il pulsante checkout
+                        priceTable.style.display = 'none';
+                        checkoutButton.classList.add('disabled');
+                        checkoutButton.disabled = true;
+                    }
+                </script>
             </body>
             </html>
         `);
+        
+        
+        
     } catch (error) {
         res.status(500).send('Error parsing JSON data');
     }

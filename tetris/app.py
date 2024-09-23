@@ -8,7 +8,9 @@ app = Flask(__name__)
 @app.route('/getPackaging', methods=['POST'])
 def getPackaging():
     data = request.get_json()["data"]
-    return {'Num_packages':2, 'Packages':[["Prodotto1", "Prodotto2"],['Prodotto3']]}
+    #problems=[{'description':"Prodotto1",'problem':'the product excedes in weight'},{'description':"Prodotto3",'problem':'the product excedes in dimensions'}]
+    problems=[]
+    return {'Num_packages':2, 'Packages':[["Prodotto1", "Prodotto2"],['Prodotto3']],'problems':problems}
 
 if __name__ == '__main__':
     app.run(debug=True)

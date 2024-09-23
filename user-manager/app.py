@@ -21,7 +21,8 @@ def get_products_info():
     response_tetris = requests.post(url, json=data)
     temporary_order_storage['num_packages'] = response_tetris.json()['Num_packages']
     temporary_order_storage['packages'] = response_tetris.json()['Packages']
-    return temporary_order_storage['packages']
+    problems=response_tetris.json()['problems']
+    return {'packages':temporary_order_storage['packages'],'priority':temporary_order_storage['priority'],'problems':problems}
     #write better the return
     
 
