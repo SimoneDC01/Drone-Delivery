@@ -285,20 +285,17 @@ app.post('/confirm', (req, res) => {
                         data.packages.forEach(packageGroup => {
                             packageGroup.forEach(product => {
                                 const li = document.createElement('li');
-                                const problem = isProductInProblems(product);
-                                
-                                if (problem) {
-                                    li.classList.add('product-item', 'red');
-                                    li.innerHTML = product + '<span class="red">' + problem.problem + '</span>';
-                                } else {
-                                    li.classList.add('product-item', 'green');
-                                    li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
-                                }
-        
+                                li.classList.add('product-item', 'green');
+                                li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
                                 productList.appendChild(li);
+                                });
                             });
-                        });
-        
+                            problems.forEach(problem)=>{
+                                    const li = document.createElement('li');
+                                    li.classList.add('product-item', 'red');
+                                    li.innerHTML = problem.description + '<span class="red">' + problem.problem + '</span>';
+                                    productList.appendChild(li);
+                            });
                         // Nascondi la tabella dei prezzi e disabilita il pulsante checkout
                         priceTable.style.display = 'none';
                         checkoutButton.classList.add('disabled');
