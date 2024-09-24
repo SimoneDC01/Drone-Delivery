@@ -4,252 +4,362 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-    body {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100vh;
-        margin: 0;
-    }
-    h1 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
-        color: #007bff;
-    }
-     /* Contenitore per la barra oraria */
-     .timeline-container {
-            width: 100%;
-            height: 50px;
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e6f2ff;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        
+        .timeline-container {
+            display: none;
+            justify-content: space-between;
             position: relative;
             margin: 20px 0;
             border-bottom: 2px solid black;
         }
 
-        /* La barra orizzontale con stanghette */
         .timeline {
             display: flex;
             justify-content: space-between;
-            position: absolute;
+            position: relative;
             width: 100%;
-            top: 0;
-            height: 100%;
         }
 
-        /* Ogni ora con la stanghetta */
         .hour {
-            position: relative;
             flex-grow: 1;
+            position: relative;
             text-align: center;
         }
 
-        /* Linea verticale (stanghetta) per ogni ora */
+        .hour-label {
+            position: absolute;
+            top: -25px;
+            left: 0%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+
         .hour::before {
             content: '';
             position: absolute;
-            top: 21%;
-            left: 50%;
+            top: -10px;
+            left:0%;
             transform: translateX(-50%);
             height: 20px;
             width: 2px;
             background-color: black;
         }
 
-        /* Etichetta oraria sotto la stanghetta */
-        .hour-label {
-            position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-        }
-
         #log {
-            position: relative; /* Posizionamento per il log */
-            background-color: #e0e0e0; /* Sfondo per il div log */
+            position: relative;
+            max-height: 300px;
+            overflow-y: auto; 
+            margin-left: 4%;
         }
         .log-header {
-            text-align: center;
-            margin-bottom: 10px; /* Spazio sopra il div log */
+            text-align: left;
+            height: 5%;
+            top: -20px;
+            position: relative;
+            margin-left: 4%;
         }
         form {
             position: absolute;
             top: 20px;
-            right: 20px; /* Posizione a destra */
+            right: 20px;
         }
         #schedule {
             margin: 20px;
-            max-width: 1200px; /* Adatta la larghezza al design */
         }
 
-        /* Stile per la riga di ogni drone */
         .drone-row {
             display: flex;
             align-items: center;
-            margin-bottom: 20px; /* Spazio tra le righe */
+            margin-bottom: 20px;
         }
 
-        /* Stile per la label del drone */
         .drone-label {
-            width: 100px; /* Larghezza fissa per le label dei droni */
+            width: 100px;
             font-weight: bold;
-            margin-right: 20px; /* Spaziatura tra la label e la barra di progresso */
-            text-align: right;  /* Allinea a destra il nome del drone */
+            margin-right: 20px;
+            text-align: right;
         }
 
-        /* Contenitore delle barre di progresso */
         .progress {
-            height: 20px; /* Altezza delle barre */
-            background-color: #e0e0e0; /* Sfondo del contenitore delle barre */
+            height: 20px;
+            background-color: #e0e0e0;
             border-radius: 10px;
-            overflow: hidden; /* Per evitare che le barre superino i bordi */
-            position: relative; /* Necessario per le barre con posizionamento assoluto */
-            flex-grow: 1; /* Occupa lo spazio rimanente a destra della label */
+            overflow: hidden;
+            position: relative;
+            flex-grow: 1;
+            margin-right: 77.3096px;
         }
 
-        /* Stile delle singole barre di progresso */
         .progress-bar {
-            height: 100%; /* Altezza della barra di progresso */
+            width: 100%;
+            height: 100%;
             border-radius: 10px;
-            background-color: blue; /* Colore di default */
+            background-color: blue;
+        }
+        #time, #date {
+            position: absolute;
+            left: 40px;
+            font-weight: bold;
+            font-size: 1.5em;
         }
         #time {
+            top: 20px;
+            color: #007bff;
+        }
+        #date {
             top: 40px;
             color: #007bff;
+        }
+        #time-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: rgb(0, 0, 0);
+            z-index: 10; 
+            left: 0%; 
+        }
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 20px;
+            cursor: pointer;
+            width: 40%; 
+        }
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            width: 50%;
+        }
+        form {
+            position: absolute;
+            right: 40px;
+            top: 20px;
         }
 
     </style>
 </head>
 <body>
     <div id="time"></div>
-    <form id="advanceform" style="float: right;">
-        <input type="text" id="minutes" placeholder="30 min">
+    <div id="date"></div>
+    <form id="advanceform">
+        <input type="text" id="minutes" placeholder="Insert minutes">
         <button type="submit">Advance</button>
     </form>
     <h1 style="text-align: center;">Admin Console</h1>
+
+    <!-- Aggiunta della barra temporale -->
+    <div class="timeline-container">
+        <div class="timeline">
+            <div id="time-line"></div>
+            <div class="hour">
+                <div class="hour-label">09:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">10:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">11:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">12:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">13:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">14:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">15:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">16:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">17:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">18:00</div>
+            </div>
+            <div class="hour">
+                <div class="hour-label">19:00</div>
+            </div>
+            <div class="hour" >
+                <div class="hour-label" id="last">20:00</div>
+            </div>
+        </div>
+    </div>
+
+    
     <div id="schedule"></div>
-    <div class="log-header"></div>
+    <div class="log-header">
         <h1>Log</h1>
     </div>
     <div id="log">
-        Contenuto del log
     </div>
+
     <script>
-        // Funzione per convertire l'orario in una percentuale rispetto alla timeline (9:00 - 20:00)
-function timeToPercentage(startTime) {
+
+        function updateTimeLine(currentTime) {
+    const timeLine = document.getElementById('time-line');
+    const [hours, minutes] = currentTime.split(':').map(Number);
+    const totalMinutes = (hours - 9) * 60 + minutes;  // Inizia alle 9:00
+    const percentage = Math.max(0,Math.min((totalMinutes / (720)) * 100,91.66));  // Tra le 9:00 e le 20:00 ci sono 11 ore = 660 minuti
+    timeLine.style.left = percentage + '%';
+}
+
+
+        function timeToPercentage(startTime) {
     const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = (hours - 9) * 60 + minutes; // Minuti dall'inizio della giornata (9:00)
-    const percentage = (totalMinutes / 660) * 100;  // Timeline dalle 09:00 alle 20:00 = 660 minuti
+    const totalMinutes = (hours - 9) * 60 + minutes;  // Inizia alle 9:00
+    const percentage = (totalMinutes / (11 * 60)) * 100;  // Tra le 9:00 e le 20:00 ci sono 11 ore = 660 minuti
     return percentage;
 }
 
-// Funzione per calcolare la larghezza in percentuale basata sulla durata
 function durationToPercentage(startTime, endTime) {
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     const [endHours, endMinutes] = endTime.split(':').map(Number);
     const startTotalMinutes = (startHours - 9) * 60 + startMinutes;
     const endTotalMinutes = (endHours - 9) * 60 + endMinutes;
     const durationMinutes = endTotalMinutes - startTotalMinutes;
-    const percentage = (durationMinutes / 660) * 100; // Timeline totale in minuti
+    const percentage = (durationMinutes / (11 * 60)) * 100;  // Calcola la percentuale rispetto ai 660 minuti totali
     return percentage;
 }
 
-// Funzione principale per creare i div con le barre di progresso
+
 function creaDivConProgressBars(schedule) {
-    const container = document.getElementById('schedule');
-    container.innerHTML = ''; // Pulisce il container prima di aggiungere le nuove barre
-
-    for (const [drone, activities] of Object.entries(schedule)) {
-        // Crea un contenitore per la riga del drone
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'drone-row'; // Stile per la riga
-        rowDiv.style.display = 'flex';  // Usa Flexbox per posizionare la label e la progress bar
-
-        // Crea un div per l'etichetta del drone (nome del drone)
-        const labelDiv = document.createElement('div');
-        labelDiv.textContent = drone;
-        labelDiv.className = 'drone-label';  // Stilizzato con CSS
-        rowDiv.appendChild(labelDiv);
-
-        // Crea il contenitore delle barre di progresso per il drone
-        const progressDiv = document.createElement('div');
-        progressDiv.className = 'progress';
-        progressDiv.style.position = 'relative';  // Per posizionare le barre in modo assoluto
-        progressDiv.style.flexGrow = 1;  // Occupa tutto lo spazio disponibile
-
-        // Loop attraverso ogni attività per il drone
-        activities.forEach(activity => {
-            const { time: { start, end }, index, priority } = activity;
-
-            const progressBar = document.createElement('div');
-            progressBar.className = 'progress-bar';
-            progressBar.style.position = 'absolute';  // Posiziona la barra all'interno del contenitore
-            progressBar.style.left = timeToPercentage(start) + '%';  // Offset rispetto alla timeline
-            progressBar.style.width = durationToPercentage(start, end) + '%';  // Larghezza della barra
-
-            // Assegna un colore basato sulla priorità o sull'index (opzionale)
-            progressBar.style.backgroundColor = getColorForPriority(priority, index);
-
-            // Tooltip opzionale con index o durata
-            progressBar.title = `Task: ${index}, Priority: ${priority}`;
-
-            progressDiv.appendChild(progressBar);
-        });
-
-        // Aggiungi il div della barra di progresso alla riga
-        rowDiv.appendChild(progressDiv);
-
-        // Aggiungi la riga completa al contenitore principale
-        container.appendChild(rowDiv);
+            
+    var timelineContainers = document.getElementsByClassName('timeline-container');
+    if (timelineContainers.length > 0) {
+    
+        timelineContainers[0].style.display = 'flex';
     }
-}
 
-// Funzione per determinare il colore in base alla priorità (opzionale)
+            const container = document.getElementById('schedule');
+            container.innerHTML = '';
 
-function getColorForPriority(priority, index) {
-    switch (priority) {
-        case 5: 
-            return 'red';       // Alta priorità
-        case 4: 
-            return 'orange';    // Priorità media
-        case 3: 
-            return 'yellow';    // Priorità bassa
-        case 2: 
-            return 'green';     // Priorità minore
-        case 1: 
-            return 'blue';      // Priorità molto bassa
-        case 0: 
-            // Controllo del valore dell'index quando la priorità è 0
-            if (index === 'recharge') {
-                return 'gray';  // Colore specifico per ricarica
-            } else {
-                return 'purple'; // Colore per altri codici con priorità 0
-            }
-        default: 
-            return 'gray';      // Default per casi non gestiti
-    }
-}
+            for (const [drone, activities] of Object.entries(schedule)) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'drone-row';
 
+                const labelDiv = document.createElement('div');
+                labelDiv.textContent = drone;
+                labelDiv.className = 'drone-label';
+                rowDiv.appendChild(labelDiv);
 
-    fetch(`http://localhost:5000/date_and_time_request`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
-                }).catch(error => {
-                    alert('Error: ' + error.message);
+                const progressDiv = document.createElement('div');
+                progressDiv.className = 'progress';
+                progressDiv.style.position = 'relative';
+                progressDiv.style.flexGrow = 1;
+
+                activities.forEach(activity => {
+                    const { time: { start, end }, index, priority } = activity;
+
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    progressBar.style.position = 'absolute';
+                    progressBar.style.left = timeToPercentage(start) + '%';
+                    progressBar.style.width = durationToPercentage(start, end) + '%';
+                    progressBar.style.backgroundColor = getColorForPriority(priority, index);
+                    progressBar.title = `Task: ${index}, Priority: ${priority}`;
+
+                    progressDiv.appendChild(progressBar);
                 });
 
+                rowDiv.appendChild(progressDiv);
+                container.appendChild(rowDiv);
+            }
+                var div = document.querySelector('.progress');
+                var divs= document.querySelectorAll('.progress');
+                var distanzaViewport = div.getBoundingClientRect().left;
 
-    document.getElementById('advanceform').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const minutes = document.getElementById('minutes').value;
+                var timelineElement = document.querySelector('.timeline');
 
-        fetch(`http://localhost:5000/advance?minutes=${minutes}`, {
+                timelineElement.style.marginLeft = distanzaViewport + 'px';
+                
+                var lastschedule=document.getElementById('last')
+                var distanzaViewportDestra = (window.innerWidth - lastschedule.getBoundingClientRect().right - lastschedule.getBoundingClientRect().width);
+                divs.forEach(progress => {
+                    progress.style.marginRight=distanzaViewportDestra+'px';
+                });
+            var time_line=document.getElementById('time-line')
+
+            var schedule=document.getElementById('schedule');
+            
+            var scheduleHeight = schedule.getBoundingClientRect().height;
+
+            
+            var scheduleStyle = window.getComputedStyle(schedule);
+            var marginTop = parseFloat(scheduleStyle.marginTop);
+            var marginBottom = parseFloat(scheduleStyle.marginBottom);
+            
+            time_line.style.height = (scheduleHeight + marginTop + marginBottom) + 'px';
+        }
+
+        function getColorForPriority(priority, index) {
+            switch (priority) {
+                case 5: return 'red';
+                case 4: return 'orange';
+                case 3: return 'yellow';
+                case 2: return 'green';
+                case 1: return 'blue';
+                case 0:
+                    return index === 'recharge' ? 'gray' : 'purple';
+                default: return 'gray';
+            }
+        }
+
+        function addLog(logList) {
+
+            const container = document.getElementById('log')
+            container.innerHTML = ''
+            const recentLogs = logList.slice(-5);
+
+            for (let i = 0; i < recentLogs.length; i++) {
+                const p = document.createElement('p');  
+                let logText = recentLogs[i];      
+                let iconHTML = '';  
+
+                if (logText.includes('wind')) {
+                    iconHTML = '<i class="fas fa-exclamation-triangle" style="color: red;"></i> ';  
+                } else if (logText.includes('returned')) {
+                    iconHTML = '<i class="fas fa-check-circle" style="color: green;"></i> ';  
+                } else if (logText.includes('recalculated')) {
+                    iconHTML = '<i class="fas fa-sync-alt" style="color: orange;"></i> ';  
+                }
+
+                
+                p.innerHTML = iconHTML + logText;  
+                container.appendChild(p);          
+        }
+        }
+
+        fetch(`http://localhost:5000/date_and_time_request`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -257,14 +367,46 @@ function getColorForPriority(priority, index) {
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('time').innerHTML = data['date'] + ' ' + data['time'];
-            //document.getElementById('schedule').innerHTML = JSON.stringify(data['schedule']);
-            creaDivConProgressBars(data['schedule'])
-            document.getElementById('log').innerHTML = JSON.stringify(data['log']);
+            document.getElementById('time').innerHTML = data['time'];
+            document.getElementById('date').innerHTML = data['date'];
+            updateTimeLine(data['time']);
         }).catch(error => {
             alert('Error: ' + error.message);
         });
-    }); 
+
+        document.getElementById('advanceform').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const minutes = document.getElementById('minutes').value;
+
+            fetch(`http://localhost:5000/advance?minutes=${minutes}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('time').innerHTML = data['time'];
+                document.getElementById('date').innerHTML = data['date'];
+                if (JSON.stringify(data['schedule']) !== '{}'){
+                creaDivConProgressBars(data['schedule']);
+                updateTimeLine(data['time']);
+                addLog(data['log'])
+                }
+                else{
+                    document.getElementById('log').innerHTML = '';
+                    const container = document.getElementById('schedule');
+                    container.innerHTML = '';
+                    var timelineContainers = document.getElementsByClassName('timeline-container');
+                    for (var i = 0; i < timelineContainers.length; i++) {
+                        timelineContainers[i].style.display = 'none'; 
+                    }
+
+                }
+            }).catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
     </script>
 </body>
 </html>
