@@ -8,7 +8,6 @@ def getProductsInfo():
     asins = request.get_json()['asins']
 
     url = "https://real-time-amazon-data.p.rapidapi.com/product-details"
-    print('asins:', asins)
     querystring = {"asin": asins, "country":"IT"}
 
     headers = {

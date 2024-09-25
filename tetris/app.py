@@ -46,7 +46,7 @@ def getPackaging():
     content = ast.literal_eval(content.decode('utf-8'))
     num_bins = len(content['response']['bins_packed'])
     for el in content['response']['not_packed_items'] :
-        problems.append({'description': el['id'], 'problem': 'exceed in weight or dimension'})
+        problems.append({'description': el['id'], 'problem': 'exceed in weight or dimension. Max dimensions: 120x120x120cm. Max weight:10kg'})
     for el in content['response']['bins_packed'] :
         pack= []
         for item in el['items'] :

@@ -127,40 +127,41 @@ app.post('/confirm', (req, res) => {
                         margin-bottom: 20px;
                     }
         
-                    .product-list {
-                        list-style: none;
-                        padding: 0;
+                    .product-table {
+                        width: 80%;
+                        border-collapse: collapse;
                         margin-bottom: 20px;
                     }
         
-                    .product-item {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 10px;
-                    }
-        
-                    .product-item::before {
-                        content: "●";
-                        margin-right: 10px;
+                    .product-table td {
+                        padding: 10px;
+                        border: none; /* Bordi invisibili */
+                        width: 33%; /* Larghezza fissa delle colonne */
                     }
         
                     .product-item.green::before {
+                        content: "●";
                         color: green;
+                        margin-right: 10px;
+                        display: flex;
+                        justify-content: flex-end;
                     }
         
                     .product-item.red::before {
+                        content: "●";
                         color: red;
+                        margin-right: 10px;
+                        display: flex;
+                        justify-content: flex-end;
                     }
         
-                    .product-item span.green {
+                    .green {
                         color: green;
-                        margin-left: 20px;
                         font-weight: bold;
                     }
         
-                    .product-item span.red {
+                    .red {
                         color: red;
-                        margin-left: 20px;
                         font-weight: bold;
                     }
         
@@ -170,6 +171,7 @@ app.post('/confirm', (req, res) => {
                         border-collapse: collapse;
                         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
                         background-color: white;
+                        align-self:center
                     }
         
                     .price-table th, .price-table td {
@@ -211,9 +213,9 @@ app.post('/confirm', (req, res) => {
             <body>
                 <h1>Confirm Your Order</h1>
                 
-                <div id="content">
-                    <!-- Elenco prodotti -->
-                    <ul class="product-list" id="productList"></ul>
+                <div id="content" style="display: flex;flex-direction: column;">
+                    <!-- Tabella prodotti -->
+                    <table class="product-table" id="productTable"></table>
         
                     <!-- Tabella del prezzo (visibile solo se problems è vuoto) -->
                     <table class="price-table" id="priceTable">
@@ -248,7 +250,7 @@ app.post('/confirm', (req, res) => {
         
                 <script>
                     const data = ${JSON.stringify(data)}; // Inseriamo i dati
-                    const productList = document.getElementById('productList');
+                    const productTable = document.getElementById('productTable');
                     const priceTable = document.getElementById('priceTable');
                     const checkoutButton = document.getElementById('checkoutButton');
         
@@ -263,10 +265,13 @@ app.post('/confirm', (req, res) => {
                         // Se non ci sono problemi, mostra i prodotti normalmente
                         data.packages.forEach(packageGroup => {
                             packageGroup.forEach(product => {
-                                const li = document.createElement('li');
-                                li.classList.add('product-item', 'green');
-                                li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
-                                productList.appendChild(li);
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = \`
+                                    <td class='product-item green'></td>
+                                    <td>\${product}</td>
+                                    <td><span class="green">The product falls within the expected parameters.</span></td>
+                                \`;
+                                productTable.appendChild(tr);
                             });
                         });
         
@@ -275,7 +280,7 @@ app.post('/confirm', (req, res) => {
                         const priorityPrice = data.priority + '.00 €';
         
                         // Calcolo totale
-                        const total = 5 + data.packages.length + parseInt(data.priority);
+                        const total = 5 + data.packages.length -1 + parseInt(data.priority);
         
                         document.getElementById('packagePrice').textContent = packagePrice;
                         document.getElementById('priorityPrice').textContent = priorityPrice;
@@ -284,18 +289,26 @@ app.post('/confirm', (req, res) => {
                         // Se ci sono problemi, mostra i prodotti con pallino rosso e scritta rossa
                         data.packages.forEach(packageGroup => {
                             packageGroup.forEach(product => {
-                                const li = document.createElement('li');
-                                li.classList.add('product-item', 'green');
-                                li.innerHTML = product + '<span class="green">The product falls within the expected parameters.</span>';
-                                productList.appendChild(li);
-                                });
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = \`
+                                    <td class='product-item green'></td>
+                                    <td>\${product}</td>
+                                    <td><span class="green">The product falls within the expected parameters.</span></td>
+                                \`;
+                                productTable.appendChild(tr);
                             });
-                            problems.forEach(problem)=>{
-                                    const li = document.createElement('li');
-                                    li.classList.add('product-item', 'red');
-                                    li.innerHTML = problem.description + '<span class="red">' + problem.problem + '</span>';
-                                    productList.appendChild(li);
-                            });
+                        });
+        
+                        problems.forEach(problem => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = \`
+                                <td class='product-item red'></td>
+                                <td>\${problem.description}</td>
+                                <td><span class="red">\${problem.problem}</span></td>
+                            \`;
+                            productTable.appendChild(tr);
+                        });
+        
                         // Nascondi la tabella dei prezzi e disabilita il pulsante checkout
                         priceTable.style.display = 'none';
                         checkoutButton.classList.add('disabled');
@@ -305,6 +318,7 @@ app.post('/confirm', (req, res) => {
             </body>
             </html>
         `);
+
         
         
         
