@@ -19,13 +19,14 @@ def getProductsInfo():
     api_response = requests.get(url, headers=headers, params=querystring)
     
     api_response = api_response.json()
-    
+   
     response = []
-    for el in api_response['data'] :
+    
+    if(type(api_response['data']) == dict):
         new_product = {}
-        new_product['description'] = el['product_title']
-        if 'Dimensioni prodotto' in list(el['product_information'].keys()):
-            dimension, weight = el['product_information']['Dimensioni prodotto'].split(';')
+        new_product['description'] = api_response['data']['product_title']
+        if 'Dimensioni prodotto' in list(api_response['data']['product_information'].keys()):
+            dimension, weight = api_response['data']['product_information']['Dimensioni prodotto'].split(';')
             dimension = dimension.replace(' ','')
             dimension = dimension.replace('cm','')
             weight = weight.replace('kg','')
@@ -37,6 +38,24 @@ def getProductsInfo():
             new_product['dimension'] = None
         
         response.append(new_product)
+
+    else :
+        for el in api_response['data'] :
+            new_product = {}
+            new_product['description'] = el['product_title']
+            if 'Dimensioni prodotto' in list(el['product_information'].keys()):
+                dimension, weight = el['product_information']['Dimensioni prodotto'].split(';')
+                dimension = dimension.replace(' ','')
+                dimension = dimension.replace('cm','')
+                weight = weight.replace('kg','')
+                weight = weight.replace(' ','')
+                new_product['weight'] = weight
+                new_product['dimension'] = dimension
+            else :
+                new_product['weight'] = None
+                new_product['dimension'] = None
+            
+            response.append(new_product)
     
     return response
     
