@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Form</title>
+    <title>Admin console</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -303,7 +303,7 @@ function creaDivConProgressBars(schedule) {
                 timelineElement.style.marginLeft = distanzaViewport + 'px';
                 
                 var lastschedule=document.getElementById('last')
-                var distanzaViewportDestra = (window.innerWidth - lastschedule.getBoundingClientRect().right - lastschedule.getBoundingClientRect().width);
+                var distanzaViewportDestra = (window.innerWidth - lastschedule.getBoundingClientRect().right - lastschedule.getBoundingClientRect().width / 2);
                 divs.forEach(progress => {
                     progress.style.marginRight=distanzaViewportDestra+'px';
                 });
@@ -340,7 +340,7 @@ function creaDivConProgressBars(schedule) {
             container.innerHTML = ''
             const recentLogs = logList.slice(-5);
 
-            for (let i = 0; i < recentLogs.length; i++) {
+            for (let i = recentLogs.length - 1; i >=0 ; i--) {
                 const p = document.createElement('p');  
                 let logText = recentLogs[i];      
                 let iconHTML = '';  
