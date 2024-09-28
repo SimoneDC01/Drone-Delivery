@@ -11,8 +11,8 @@ def getProductsInfo():
     querystring = {"asin": asins, "country":"IT"}
 
     headers = {
-        "x-rapidapi-key": "3f50d721e5mshec3bbab93d99701p15dbffjsn8b15d28c99a5",
-        "x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com"
+        "x-rapidapi-key": "9dfdc3357emsh5ca789ee00f9d26p1c4e07jsn76e1448bf2b3",
+	"x-rapidapi-host": "real-time-amazon-data.p.rapidapi.com"
     }
 
     api_response = requests.get(url, headers=headers, params=querystring)
